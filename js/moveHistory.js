@@ -1,5 +1,5 @@
 /**
- * Movement History / Ledger Controller
+ * Movement History / Ledger Controller (Arabic Version)
  */
 
 window.moveHistoryController = {
@@ -11,15 +11,44 @@ window.moveHistoryController = {
         this.fetchData();
     },
 
+    translateType: function(type) {
+        switch (type) {
+            case 'Receipt': return 'إذن استلام (وارد)';
+            case 'Delivery': return 'إذن صرف (منصرف)';
+            case 'Transfer': return 'تحويل داخلي';
+            case 'Adjustment': return 'تسوية مخزنية';
+            default: return type || '-';
+        }
+    },
+
+    translateStatus: function(status) {
+        switch (status) {
+            case 'Draft': return 'مسودة';
+            case 'Waiting': return 'قيد الانتظار';
+            case 'Ready': return 'جاهز';
+            case 'Done': return 'مكتمل';
+            case 'Canceled': return 'ملغي';
+            default: return status || '-';
+        }
+    },
+
+    translateLocation: function(loc) {
+        if (!loc) return '-';
+        if (loc === 'Warehouse' || loc === 'Main Warehouse') return 'المستودع الرئيسي';
+        if (loc === 'Vendors' || loc === 'Suppliers') return 'الموردين';
+        if (loc === 'Customers') return 'العملاء';
+        return loc;
+    },
+
     renderList: function() {
         this.container.innerHTML = `
             <div class="view-header">
                 <div class="view-header-left">
-                    <h2 class="view-title">Movement History</h2>
+                    <h2 class="view-title">سجل حركات المخزن</h2>
                 </div>
                 <div class="view-header-right">
                     <div class="search-container">
-                        <input type="text" id="hist-search" placeholder="Search ref, product, or type...">
+                        <input type="text" id="hist-search" placeholder="بحث برقم الإذن، اسم المنتج، أو نوع الحركة...">
                     </div>
                 </div>
             </div>
@@ -28,18 +57,18 @@ window.moveHistoryController = {
                 <table>
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Reference</th>
-                            <th>Product</th>
-                            <th>Type</th>
-                            <th>From</th>
-                            <th>To</th>
-                            <th>Qty Change</th>
-                            <th>Status</th>
+                            <th>التاريخ</th>
+                            <th>رقم المرجع / الإذن</th>
+                            <th>المنتج / الصنف</th>
+                            <th>نوع العملية</th>
+                            <th>من</th>
+                            <th>إلى</th>
+                            <th>التغيير في الكمية</th>
+                            <th>الحالة</th>
                         </tr>
                     </thead>
                     <tbody id="hist-tbody">
-                        <tr><td colspan="8" class="text-center text-muted">Loading history...</td></tr>
+                        <tr><td colspan="8" class="text-center text-muted">جاري تحميل سجل الحركات...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -50,7 +79,9 @@ window.moveHistoryController = {
             const filtered = this.historyList.filter(h => 
                 (h.reference || '').toLowerCase().includes(val) || 
                 (h.productName || '').toLowerCase().includes(val) ||
-                (h.type || '').toLowerCase().includes(val)
+                (h.type || '').toLowerCase().includes(val) ||
+                (this.translateType(h.type) || '').toLowerCase().includes(val) ||
+                (this.translateStatus(h.status) || '').toLowerCase().includes(val)
             );
             this.populateTable(filtered);
         });
@@ -70,7 +101,7 @@ window.moveHistoryController = {
             this.populateTable(this.historyList);
         } catch (e) {
             console.error(e);
-            utils.showToast("Error loading movement history", "error");
+            utils.showToast("خطأ أثناء تحميل سجل الحركات", "error");
         } finally {
             utils.hideLoader();
         }
@@ -81,7 +112,7 @@ window.moveHistoryController = {
         tbody.innerHTML = '';
         
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No movement history found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">لا توجد حركات مخزنية مسجلة.</td></tr>';
             return;
         }
         
@@ -97,13 +128,13 @@ window.moveHistoryController = {
 
             tr.innerHTML = `
                 <td style="white-space:nowrap">${dateStr}</td>
-                <td class="font-weight-600">${h.reference}</td>
-                <td>${h.productName}</td>
-                <td>${h.type}</td>
-                <td>${h.from || '-'}</td>
-                <td>${h.to || '-'}</td>
-                <td style="font-weight:600; color:${h.qtyChange>0?'var(--status-done)':(h.qtyChange<0?'var(--status-canceled)':'inherit')}">${diffStr}</td>
-                <td><span class="badge badge-${(h.status||'').toLowerCase()}">${h.status}</span></td>
+                <td class="font-weight-600">${h.reference || '-'}</td>
+                <td><strong>${h.productName || '-'}</strong></td>
+                <td>${this.translateType(h.type)}</td>
+                <td>${this.translateLocation(h.from)}</td>
+                <td>${this.translateLocation(h.to)}</td>
+                <td dir="ltr" style="text-align:right; font-weight:600; color:${h.qtyChange > 0 ? 'var(--status-done)' : (h.qtyChange < 0 ? 'var(--status-canceled)' : 'inherit')}">${diffStr}</td>
+                <td><span class="badge badge-${(h.status || '').toLowerCase()}">${this.translateStatus(h.status)}</span></td>
             `;
             tbody.appendChild(tr);
         });
