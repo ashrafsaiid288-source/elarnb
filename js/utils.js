@@ -1,13 +1,13 @@
 /**
- * Shared Utilities for CoreInventory
+ * Shared Utilities for CoreInventory (Arabic Version)
  */
 
-// Format Date as DD-MM-YYYY
+// Format Date as DD-MM-YYYY in Arabic
 function formatDate(isoString) {
     if (!isoString) return '';
     const date = new Date(isoString);
     if (isNaN(date.getTime())) return isoString;
-    return date.toLocaleDateString('en-GB', {
+    return date.toLocaleDateString('ar-EG', {
         day: '2-digit', 
         month: 'short', 
         year: 'numeric'
@@ -70,11 +70,11 @@ function showConfirm(title, message) {
                 <div>${title}</div>
             </div>
             <div class="modal-body">
-                <p>${message}</p>
+                <p style="margin: 0.5rem 0 1rem 0; font-size: 0.95rem; line-height: 1.6;">${message}</p>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="confirm-cancel">Cancel</button>
-                <button class="btn btn-primary" id="confirm-ok">Confirm</button>
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                <button class="btn btn-secondary" id="confirm-cancel">إلغاء</button>
+                <button class="btn btn-primary" id="confirm-ok">تأكيد ومتابعة</button>
             </div>
         `;
         
@@ -99,13 +99,12 @@ function showEmptyState(containerId, message, ctaText = null, ctaCallback = null
     if (!container) return;
     
     let html = `
-        <div class="empty-state">
-            <div class="empty-state-icon">📋</div>
-            <p>${message}</p>
+        <div class="empty-state" style="text-align: center; padding: 3rem 1rem;">
+            <div class="empty-state-icon" style="font-size: 2.5rem; margin-bottom: 0.75rem;">📋</div>
+            <p style="color: var(--text-muted); margin-bottom: 1rem;">${message}</p>
     `;
     
     if (ctaText && ctaCallback) {
-        // Need to add button and attach listener after HTML injection
         html += `<button id="empty-state-btn" class="btn btn-primary">${ctaText}</button>`;
     }
     
