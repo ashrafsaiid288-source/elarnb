@@ -1,5 +1,5 @@
 /**
- * Deliveries Controller (Outgoing Operations)
+ * Deliveries Controller (Outgoing Operations - Arabic Version)
  */
 
 window.deliveriesController = {
@@ -11,16 +11,35 @@ window.deliveriesController = {
         this.fetchData();
     },
 
+    translateStatus: function(status) {
+        switch (status) {
+            case 'Draft': return 'مسودة';
+            case 'Waiting': return 'قيد الانتظار';
+            case 'Ready': return 'جاهز للصرف';
+            case 'Done': return 'مكتمل';
+            case 'Canceled': return 'ملغي';
+            default: return status || '-';
+        }
+    },
+
+    translateOperationType: function(type) {
+        switch (type) {
+            case 'Delivery': return 'إذن صرف / تسليم';
+            case 'Return': return 'مرتجع بضاعة';
+            default: return type || '-';
+        }
+    },
+
     renderList: function() {
         this.container.innerHTML = `
             <div class="view-header">
                 <div class="view-header-left">
-                    <button class="btn btn-primary" id="btn-new-delivery">NEW</button>
-                    <h2 class="view-title">Deliveries</h2>
+                    <button class="btn btn-primary" id="btn-new-delivery">إذن صرف جديد</button>
+                    <h2 class="view-title">أذون الصرف (المنصرف)</h2>
                 </div>
                 <div class="view-header-right">
                     <div class="search-container">
-                        <input type="text" id="delivery-search" placeholder="Search ref or address...">
+                        <input type="text" id="delivery-search" placeholder="بحث برقم الإذن أو العنوان / العميل...">
                     </div>
                 </div>
             </div>
@@ -29,14 +48,14 @@ window.deliveriesController = {
                 <table>
                     <thead>
                         <tr>
-                            <th>Reference</th>
-                            <th>Contact / Address</th>
-                            <th>Schedule Date</th>
-                            <th>Status</th>
+                            <th>رقم المرجع / الإذن</th>
+                            <th>العميل / عنوان التسليم</th>
+                            <th>تاريخ الصرف المقرر</th>
+                            <th>الحالة</th>
                         </tr>
                     </thead>
                     <tbody id="deliveries-tbody">
-                        <tr><td colspan="4" class="text-center text-muted">Loading deliveries...</td></tr>
+                        <tr><td colspan="4" class="text-center text-muted">جاري تحميل أذون الصرف...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -48,7 +67,8 @@ window.deliveriesController = {
             const val = e.target.value.toLowerCase();
             const filtered = this.deliveriesList.filter(d => 
                 (d.reference || '').toLowerCase().includes(val) || 
-                (d.deliveryAddress || '').toLowerCase().includes(val)
+                (d.deliveryAddress || '').toLowerCase().includes(val) ||
+                (this.translateStatus(d.status) || '').toLowerCase().includes(val)
             );
             this.populateTable(filtered);
         });
@@ -68,7 +88,7 @@ window.deliveriesController = {
             this.populateTable(this.deliveriesList);
         } catch (e) {
             console.error(e);
-            utils.showToast("Error loading deliveries", "error");
+            utils.showToast("خطأ أثناء تحميل بيانات أذون الصرف", "error");
         } finally {
             utils.hideLoader();
         }
@@ -79,7 +99,7 @@ window.deliveriesController = {
         tbody.innerHTML = '';
         
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No deliveries found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">لا توجد أذون صرف مسجلة.</td></tr>';
             return;
         } 
         
@@ -88,16 +108,15 @@ window.deliveriesController = {
             tr.className = 'clickable';
             tr.onclick = () => this.openForm(d);
             tr.innerHTML = `
-                <td class="font-weight-600">${d.reference || 'Draft'}</td>
+                <td class="font-weight-600">${d.reference || 'مسودة'}</td>
                 <td>${d.deliveryAddress || '-'}</td>
                 <td>${utils.formatDate(d.scheduleDate)}</td>
-                <td><span class="badge badge-${d.status.toLowerCase()}">${d.status}</span></td>
+                <td><span class="badge badge-${(d.status || '').toLowerCase()}">${this.translateStatus(d.status)}</span></td>
             `;
             tbody.appendChild(tr);
         });
     },
 
-    // Similar robust structure as receipts
     openForm: async function(delivery = null) {
         const isEdit = !!delivery;
         const status = isEdit ? delivery.status : 'Draft';
@@ -106,51 +125,51 @@ window.deliveriesController = {
         this.container.innerHTML = `
             <div class="view-header" style="margin-bottom:var(--spacing-sm); border:none; padding-bottom:0;">
                 <div class="view-header-left">
-                    <button class="btn btn-secondary" id="btn-back">← Back</button>
-                    ${status === 'Draft' ? `<button class="btn btn-primary" id="btn-mark-ready">Mark as Ready</button>` : ''}
-                    <h2 class="view-title" style="margin-left:var(--spacing-md)">Delivery</h2>
+                    <button class="btn btn-secondary" id="btn-back">← رجوع</button>
+                    ${status === 'Draft' ? `<button class="btn btn-primary" id="btn-mark-ready">تحديد كـ جاهز</button>` : ''}
+                    <h2 class="view-title" style="margin-right:var(--spacing-md)">إذن صرف بضاعة</h2>
                 </div>
             </div>
             
             <div class="doc-header" style="background:var(--surface); padding:var(--spacing-md); border:1px solid var(--border); border-bottom:none; border-radius:var(--border-radius) var(--border-radius) 0 0; margin-bottom:0; display:flex; align-items:center;">
                 <div style="flex:1;">
-                    ${status === 'Ready' && !isReadOnly ? `<button class="btn btn-success" id="btn-validate" style="background:var(--status-done); color:white; border:none; padding:0.5rem 1rem; border-radius:4px; margin-right:8px;">Validate</button>` : ''}
-                    <button class="btn btn-secondary" id="btn-print" ${!isReadOnly ? 'disabled' : ''}>Print</button>
-                    ${!isReadOnly ? `<button class="btn btn-secondary" id="btn-cancel">Cancel</button>` : ''}
+                    ${status === 'Ready' && !isReadOnly ? `<button class="btn btn-success" id="btn-validate" style="background:var(--status-done); color:white; border:none; padding:0.5rem 1rem; border-radius:4px; margin-left:8px;">اعتماد وصرف المخزون</button>` : ''}
+                    <button class="btn btn-secondary" id="btn-print" ${!isReadOnly ? 'disabled' : ''}>طباعة</button>
+                    ${!isReadOnly ? `<button class="btn btn-secondary" id="btn-cancel">إلغاء الإذن</button>` : ''}
                 </div>
                 
                 <div class="status-pipeline">
-                    <span class="step ${status === 'Draft' ? 'active' : ''}">Draft</span> >
-                    <span class="step ${status === 'Waiting' ? 'active' : ''}">Waiting</span> >
-                    <span class="step ${status === 'Ready' ? 'active' : ''}">Ready</span> >
-                    <span class="step ${status === 'Done' ? 'active' : ''}">Done</span>
+                    <span class="step ${status === 'Draft' ? 'active' : ''}">مسودة</span> ←
+                    <span class="step ${status === 'Waiting' ? 'active' : ''}">انتظار</span> ←
+                    <span class="step ${status === 'Ready' ? 'active' : ''}">جاهز</span> ←
+                    <span class="step ${status === 'Done' ? 'active' : ''}">مكتمل</span>
                 </div>
             </div>
 
             <div class="form-document" style="border-top-left-radius:0; border-top-right-radius:0;">
-                <div class="doc-ref text-muted" style="margin-bottom:var(--spacing-md)">${isEdit ? delivery.reference : 'New'}</div>
+                <div class="doc-ref text-muted" style="margin-bottom:var(--spacing-md)">${isEdit ? delivery.reference : 'جديد'}</div>
                 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>Delivery Address / Contact</label>
-                        <input type="text" id="d-contact" value="${isEdit ? (delivery.deliveryAddress || '') : ''}" ${isReadOnly ? 'disabled' : ''}>
+                        <label>عنوان التسليم / العميل</label>
+                        <input type="text" id="d-contact" value="${isEdit ? (delivery.deliveryAddress || '') : ''}" placeholder="اسم العميل أو عنوان الاستلام" ${isReadOnly ? 'disabled' : ''}>
                     </div>
                     <div class="form-group">
-                        <label>Schedule Date</label>
+                        <label>تاريخ الصرف المقرر</label>
                         <input type="date" id="d-date" value="${isEdit ? (delivery.scheduleDate || '') : new Date().toISOString().split('T')[0]}" ${isReadOnly ? 'disabled' : ''}>
                     </div>
                 </div>
                 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>Responsible</label>
-                        <input type="text" value="${isEdit ? delivery.responsible : window.currentUser?.name}" disabled>
+                        <label>المسؤول</label>
+                        <input type="text" value="${isEdit ? delivery.responsible : (window.currentUser?.name || 'مدير النظام')}" disabled>
                     </div>
                     <div class="form-group">
-                        <label>Operation Type</label>
+                        <label>نوع العملية</label>
                         <select id="d-type" ${isReadOnly ? 'disabled' : ''}>
-                            <option value="Delivery" ${isEdit && delivery.operationType==='Delivery'?'selected':''}>Delivery</option>
-                            <option value="Return" ${isEdit && delivery.operationType==='Return'?'selected':''}>Return of Good</option>
+                            <option value="Delivery" ${isEdit && delivery.operationType==='Delivery'?'selected':''}>إذن صرف / تسليم</option>
+                            <option value="Return" ${isEdit && delivery.operationType==='Return'?'selected':''}>مرتجع بضاعة</option>
                         </select>
                     </div>
                 </div>
@@ -159,16 +178,16 @@ window.deliveriesController = {
                     <table>
                         <thead>
                             <tr>
-                                <th>Product</th>
-                                <th>Quantity</th>
-                                ${!isReadOnly ? '<th></th>' : ''}
+                                <th>المنتج / الصنف</th>
+                                <th>الكمية المطلوبة</th>
+                                ${!isReadOnly ? '<th>إجراء</th>' : ''}
                             </tr>
                         </thead>
                         <tbody id="d-lines-tbody"></tbody>
                         ${!isReadOnly ? `
                         <tfoot>
                             <tr>
-                                <td colspan="3"><a href="#" id="add-d-line"> + Add New product</a></td>
+                                <td colspan="3"><a href="#" id="add-d-line"> + إضافة صنف آخر للإذن</a></td>
                             </tr>
                         </tfoot>` : ''}
                     </table>
@@ -176,12 +195,11 @@ window.deliveriesController = {
                 
                 ${!isReadOnly ? `
                 <div style="margin-top:var(--spacing-xl)">
-                    <button class="btn btn-primary" id="btn-save-draft">Save Changes</button>
+                    <button class="btn btn-primary" id="btn-save-draft">حفظ التغييرات</button>
                 </div>` : ''}
             </div>
         `;
 
-        // Product Dropdown populate logic (same as receipts)
         let productOptions = [];
         try {
             const pSnap = await window.fbDb.collection('products').get();
@@ -193,7 +211,7 @@ window.deliveriesController = {
             if(isReadOnly) {
                 tr.innerHTML = `<td>${lineData.productLabel}</td><td>${lineData.quantity}</td>`;
             } else {
-                let opts = `<option value="">Select Product...</option>`;
+                let opts = `<option value="">اختر المنتج...</option>`;
                 productOptions.forEach(p => {
                     const sel = (p.id === lineData.productId) ? 'selected' : '';
                     opts += `<option value="${p.id}" ${sel}>[${p.sku}] ${p.name}</option>`;
@@ -206,8 +224,8 @@ window.deliveriesController = {
                     <td class="editable" style="padding:0">
                         <input type="number" class="dline-qty" value="${lineData.quantity || 1}" min="1" required style="border:none; height:100%; padding:0.75rem;">
                     </td>
-                    <td style="text-align:right; padding:0 1rem;">
-                        <button class="icon-btn text-error btn-remove-line">&times;</button>
+                    <td style="text-align:center; padding:0 1rem;">
+                        <button type="button" class="icon-btn text-error btn-remove-line" style="cursor:pointer;" title="حذف">&times;</button>
                     </td>
                 `;
                 setTimeout(() => {
@@ -256,7 +274,7 @@ window.deliveriesController = {
                 return {
                     deliveryAddress: document.getElementById('d-contact').value.trim(),
                     scheduleDate: document.getElementById('d-date').value,
-                    responsible: window.currentUser?.name || "System Admin",
+                    responsible: window.currentUser?.name || "مدير النظام",
                     operationType: document.getElementById('d-type').value,
                     lines: newLines
                 };
@@ -283,11 +301,11 @@ window.deliveriesController = {
                             tr.set(newRef, data);
                             return newRef.id;
                         });
-                        utils.showToast("Delivery saved", "success");
+                        utils.showToast("تم حفظ إذن الصرف بنجاح", "success");
                         this.openForm({id: t, ...data});
                     } else {
                         await db.collection('deliveries').doc(delivery.id).update(data);
-                        utils.showToast("Delivery updated", "success");
+                        utils.showToast("تم تحديث إذن الصرف بنجاح", "success");
                         delivery.status = newStatus;
                         this.openForm(delivery);
                     }
@@ -309,7 +327,7 @@ window.deliveriesController = {
 
             const cancelBtn = document.getElementById('btn-cancel');
             if(cancelBtn) cancelBtn.addEventListener('click', async () => {
-                if(await utils.showConfirm("Cancel Delivery", "Are you sure?")) saveDelivery('Canceled');
+                if(await utils.showConfirm("إلغاء الإذن", "هل أنت متأكد من رغبتك في إلغاء إذن الصرف هذا؟")) saveDelivery('Canceled');
             });
 
             // VALIDATE LOGIC FOR DEMAND (CHECK STOCK)
@@ -317,16 +335,15 @@ window.deliveriesController = {
             if(validateBtn) {
                 validateBtn.addEventListener('click', async () => {
                     const data = gatherData();
-                    if(data.lines.length === 0) return utils.showToast("No products to deliver", "error");
+                    if(data.lines.length === 0) return utils.showToast("يرجى إضافة أصناف إلى إذن الصرف أولاً", "error");
                     
-                    if(!await utils.showConfirm("Validate Delivery", "This will deduct stock permanently. Continue?")) return;
+                    if(!await utils.showConfirm("اعتماد وصرف البضاعة", "سيؤدي هذا الإجراء إلى خصم الكميات من رصيد المخزون الفعلي بشكل نهائي. هل تريد المتابعة؟")) return;
 
                     utils.showLoader();
                     const db = window.fbDb;
                     const whId = data.warehouseId || (await db.collection('warehouses').limit(1).get()).docs[0]?.id;
                     
                     try {
-                        // We must fetch stock and verify manually to prevent negative values
                         const batch = db.batch();
                         
                         for(const line of data.lines) {
@@ -337,7 +354,7 @@ window.deliveriesController = {
                             const stockOnHand = sReq.empty ? 0 : (sReq.docs[0].data().onHand || 0);
                             
                             if (stockOnHand < line.quantity) {
-                                throw new Error(`Insufficient stock for ${line.productLabel}. Available: ${stockOnHand}, Requested: ${line.quantity}`);
+                                throw new Error(`الرصيد المتاح غير كافٍ للصنف (${line.productLabel}). الرصيد بالمخزن: ${stockOnHand}، والكمية المطلوبة: ${line.quantity}`);
                             }
 
                             // Update stock
@@ -356,11 +373,11 @@ window.deliveriesController = {
                                 reference: delivery.reference,
                                 productId: line.productId,
                                 productName: line.productLabel,
-                                contact: data.deliveryAddress || 'Unknown',
-                                from: 'Warehouse',
-                                to: data.deliveryAddress || 'Customer',
-                                quantity: line.quantity, // raw qty
-                                qtyChange: -line.quantity, // negative for outgoing
+                                contact: data.deliveryAddress || 'غير محدد',
+                                from: 'المستودع الرئيسي',
+                                to: data.deliveryAddress || 'العميل',
+                                quantity: line.quantity,
+                                qtyChange: -line.quantity,
                                 status: "Done"
                             });
                         }
@@ -371,14 +388,13 @@ window.deliveriesController = {
                         batch.update(db.collection('deliveries').doc(delivery.id), data);
 
                         await batch.commit();
-                        utils.showToast("Delivery Validated Successfully", "success");
-                        // Refresh
+                        utils.showToast("تم اعتماد وصرف البضاعة من المخزن بنجاح", "success");
+                        
                         delivery.status = 'Done';
                         this.openForm(delivery);
 
                     } catch(err) {
                         utils.hideLoader();
-                        // Triggers when stock goes negative condition is met
                         utils.showToast(err.message, "error");
                     }
                 });
