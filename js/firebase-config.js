@@ -11,12 +11,13 @@
  */
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCeeredwO274CDjE0k4RbNhRC7ahSv5DXY",
-    authDomain: "elarnab.firebaseapp.com",
-    projectId: "elarnab",
-    storageBucket: "elarnab.firebasestorage.app",
-    messagingSenderId: "371017287026",
-    appId: "1:371017287026:web:0ebd5b8ab9def19734c9eb"
+  apiKey: "AIzaSyCeeredwO274CDjE0k4RbNhAC7ahSv5DXY",
+  authDomain: "elarnab.firebaseapp.com",
+  projectId: "elarnab",
+  storageBucket: "elarnab.firebasestorage.app",
+  messagingSenderId: "371017287026",
+  appId: "1:371017287026:web:0ebd5b8ab9def19734c9eb",
+  measurementId: "G-7KY9DT62F0"
 };
 
 // Initialize Firebase only if the config is valid
