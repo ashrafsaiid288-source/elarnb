@@ -9,12 +9,12 @@
     <!-- Google Fonts (Cairo & Inter) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Custom Styles -->
     <link rel="stylesheet" href="css/style.css">
     <style>
-        body, input, button, select, textarea {
+        body, input, button, select, textarea, .nav-brand, h1, h2, h3, h4, span, a, p {
             font-family: 'Cairo', 'Inter', sans-serif !important;
         }
     </style>
@@ -33,7 +33,7 @@
     <div id="auth-screen">
         <div class="auth-header">
             <h1 class="brand-logo">CoreInventory</h1>
-            <p class="brand-subtitle">نظام إدارة المخازن والمستودعات</p>
+            <p class="brand-subtitle">نظام إدارة المخازن والمستودعات السحابي</p>
         </div>
         
         <div class="auth-container">
@@ -42,8 +42,8 @@
                 <h2>مرحباً بك مجدداً</h2>
                 <form id="login-form">
                     <div class="form-group">
-                        <label for="login-id">اسم المستخدم أو الإيميل</label>
-                        <input type="text" id="login-id" placeholder="أدخل اسم المستخدم" required>
+                        <label for="login-id">اسم المستخدم أو البريد الإلكتروني</label>
+                        <input type="text" id="login-id" placeholder="أدخل اسم المستخدم أو الإيميل" required>
                     </div>
                     <div class="form-group relative">
                         <label for="login-password">كلمة المرور</label>
@@ -83,12 +83,12 @@
                 <h2>إنشاء حساب جديد</h2>
                 <form id="signup-form">
                     <div class="form-group">
-                        <label for="signup-login-id">اسم المستخدم</label>
-                        <input type="text" id="signup-login-id" required minlength="6" maxlength="12" placeholder="من 6 إلى 12 حرف">
+                        <label for="signup-login-id">اسم المستخدم (Login ID)</label>
+                        <input type="text" id="signup-login-id" required minlength="6" maxlength="12" placeholder="من 6 إلى 12 حرف ورقم">
                     </div>
                     <div class="form-group">
                         <label for="signup-email">البريد الإلكتروني</label>
-                        <input type="email" id="signup-email" required placeholder="example@domain.com">
+                        <input type="email" id="signup-email" required placeholder="example@mail.com">
                     </div>
                     <div class="form-group relative">
                         <label for="signup-password">كلمة المرور</label>
@@ -109,7 +109,7 @@
                         </div>
                         <span id="signup-error" class="error-msg"></span>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block">تسجيل الحساب</button>
+                    <button type="submit" class="btn btn-primary btn-block">تأكيد إنشاء الحساب</button>
                     <div class="auth-links">
                         <a href="#" id="link-login">العودة لتسجيل الدخول</a>
                     </div>
@@ -130,7 +130,7 @@
                 <form id="otp-request-form">
                     <div class="form-group">
                         <label for="otp-email">البريد الإلكتروني المسجل</label>
-                        <input type="email" id="otp-email" required placeholder="example@domain.com">
+                        <input type="email" id="otp-email" required placeholder="example@mail.com">
                     </div>
                     <button type="submit" class="btn btn-primary btn-block" id="btn-send-otp">إرسال رمز التحقق</button>
                     <div class="auth-links">
@@ -144,7 +144,7 @@
                 <form id="otp-verify-form">
                     <div class="form-group">
                         <label for="otp-code">أدخل الرمز المكون من 6 أرقام</label>
-                        <input type="text" id="otp-code" required maxlength="6" style="text-align: center; letter-spacing: 4px;">
+                        <input type="text" id="otp-code" required maxlength="6" style="text-align: center; letter-spacing: 5px; font-size: 1.2rem;">
                         <span id="otp-error" class="error-msg"></span>
                     </div>
                     <button type="submit" class="btn btn-primary btn-block" id="btn-verify-otp">تأكيد الرمز</button>
@@ -178,6 +178,7 @@
              </div>
         </div>
     </div>
+
     <!-- MAIN APP SCREEN -->
     <div id="app" class="hidden">
         <!-- TOP NAVIGATION BAR -->
@@ -218,7 +219,6 @@
 
         <!-- MAIN CONTENT AREA -->
         <main id="main-content">
-            <!-- View Containers will be injected here or toggled via CSS -->
             <div id="view-dashboard" class="view active"></div>
             <div id="view-products" class="view"></div>
             <div id="view-receipts" class="view"></div>
