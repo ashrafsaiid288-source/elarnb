@@ -1,490 +1,145 @@
 /**
- * Receipts Controller (Incoming Operations)
+ * User Profile Controller (Arabic Version)
  */
 
-window.receiptsController = {
-    receiptsList: [],
-
+window.profileController = {
     init: async function(container) {
         this.container = container;
-        this.renderList();
-        this.fetchData();
-    },
+        
+        const u = window.currentUser || { name: 'المسؤول', email: '', role: 'مدير النظام' };
 
-    renderList: function() {
         this.container.innerHTML = `
             <div class="view-header">
-                <div class="view-header-left">
-                    <button class="btn btn-primary" id="btn-new-receipt">NEW</button>
-                    <h2 class="view-title">Receipts</h2>
-                </div>
-                <div class="view-header-right">
-                    <div class="search-container">
-                        <input type="text" id="receipt-search" placeholder="Search ref or contact...">
+                <h2 class="view-title">الملف الشخصي والإعدادات</h2>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: var(--spacing-xl); align-items: start;">
+                
+                <!-- العمود الأيمن: بطاقة الملف الشخصي -->
+                <div style="background: var(--surface); padding: var(--spacing-xl); border-radius: var(--border-radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm); text-align: center;">
+                    <div style="width: 100px; height: 100px; border-radius: 50%; background: #F3F4F6; color: var(--text-muted); display:flex; align-items:center; justify-content:center; margin: 0 auto 1.5rem auto; border: 2px solid var(--primary);">
+                        <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
-                    <button class="icon-btn active" id="btn-view-list" title="List View">≡</button>
-                    <button class="icon-btn" id="btn-view-kanban" title="Kanban View">⊞</button>
+                    
+                    <h3 style="font-size: 1.5rem; margin-bottom: 0.25rem;">${u.name}</h3>
+                    <p class="text-muted" style="margin-bottom: 1rem;">${u.email}</p>
+                    <span class="badge badge-waiting" style="font-size: 0.8rem; padding: 0.25rem 0.75rem">${this.translateRole(u.role)}</span>
+                    
+                    <hr style="border:0; border-top:1px dashed var(--border); margin: 2rem 0;">
+                    
+                    <div style="text-align: right; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 2rem;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom: 0.5rem">
+                            <span>حالة الحساب</span> <strong class="text-success">نشط</strong>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom: 0.5rem">
+                            <span>عضو منذ</span> <strong>2024</strong>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-danger btn-block" id="btn-logout-profile">تسجيل الخروج من النظام</button>
                 </div>
-            </div>
-            
-            <div id="receipts-list-view" class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Reference</th>
-                            <th>Contact</th>
-                            <th>Schedule Date</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="receipts-tbody">
-                        <tr><td colspan="4" class="text-center text-muted">Loading receipts...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <div id="receipts-kanban-view" class="kanban-board hidden">
-                <div class="kanban-col" id="col-draft">
-                    <h3>Draft <span>0</span></h3>
-                    <div class="k-cards"></div>
-                </div>
-                <div class="kanban-col" id="col-ready">
-                    <h3>Ready <span>0</span></h3>
-                    <div class="k-cards"></div>
-                </div>
-                <div class="kanban-col" id="col-done">
-                    <h3>Done <span>0</span></h3>
-                    <div class="k-cards"></div>
-                </div>
-                <div class="kanban-col" id="col-canceled">
-                    <h3>Canceled <span>0</span></h3>
-                    <div class="k-cards"></div>
+
+                <!-- العمود الأيسر: النماذج والتفضيلات -->
+                <div>
+                    <div style="background: var(--surface); padding: var(--spacing-xl); border-radius: var(--border-radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm); margin-bottom: var(--spacing-xl);">
+                        <h3 style="margin-bottom: 1.5rem; display:flex; align-items:center; gap: 0.5rem;">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            البيانات الشخصية
+                        </h3>
+                        <form id="profile-form">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>الاسم بالكامل</label>
+                                    <input type="text" id="prof-name" value="${u.name}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>البريد الإلكتروني</label>
+                                    <input type="email" value="${u.email}" disabled title="لا يمكن تعديل البريد الإلكتروني من هنا">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">حفظ التعديلات</button>
+                        </form>
+                    </div>
+
+                    <div style="background: var(--surface); padding: var(--spacing-xl); border-radius: var(--border-radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
+                        <h3 style="margin-bottom: 1.5rem; display:flex; align-items:center; gap: 0.5rem;">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            تفضيلات التطبيق
+                        </h3>
+                        
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding: 1rem 0; border-bottom: 1px solid var(--border);">
+                            <div>
+                                <h4 style="margin:0">إشعارات البريد الإلكتروني</h4>
+                                <p class="text-muted" style="font-size:0.875rem; margin:0">استلام تقارير يومية بملخص حركة المخزون</p>
+                            </div>
+                            <input type="checkbox" checked style="width: auto;">
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding: 1rem 0;">
+                            <div>
+                                <h4 style="margin:0">الوضع الداكن (Dark Mode)</h4>
+                                <p class="text-muted" style="font-size:0.875rem; margin:0">تبديل واجهة النظام إلى النمط الليلي</p>
+                            </div>
+                            <input type="checkbox" id="toggle-dark-mode" style="width: auto;" ${document.body.classList.contains('dark-mode') ? 'checked' : ''}>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
 
-        document.getElementById('btn-new-receipt').addEventListener('click', () => this.openForm());
-        
-        document.getElementById('receipt-search').addEventListener('input', (e) => {
-            const val = e.target.value.toLowerCase();
-            const filtered = this.receiptsList.filter(r => 
-                (r.reference || '').toLowerCase().includes(val) || 
-                (r.receiveFrom || '').toLowerCase().includes(val)
-            );
-            this.populateViews(filtered);
-        });
+        // Update Profile Event
+        document.getElementById('profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nName = document.getElementById('prof-name').value.trim();
+            if(!nName) return;
 
-        // View Toggles
-        document.getElementById('btn-view-list').addEventListener('click', (e) => {
-            e.currentTarget.classList.add('active');
-            document.getElementById('btn-view-kanban').classList.remove('active');
-            document.getElementById('receipts-list-view').classList.remove('hidden');
-            document.getElementById('receipts-kanban-view').classList.add('hidden');
-        });
-
-        document.getElementById('btn-view-kanban').addEventListener('click', (e) => {
-            e.currentTarget.classList.add('active');
-            document.getElementById('btn-view-list').classList.remove('active');
-            document.getElementById('receipts-kanban-view').classList.remove('hidden');
-            document.getElementById('receipts-list-view').classList.add('hidden');
-        });
-    },
-
-    fetchData: async function() {
-        if (!window.fbDb) return;
-        utils.showLoader();
-        try {
-            const snap = await window.fbDb.collection('receipts').orderBy('createdAt', 'desc').get();
-            this.receiptsList = [];
-            snap.forEach(doc => {
-                const r = doc.data();
-                r.id = doc.id;
-                this.receiptsList.push(r);
-            });
-            this.populateViews(this.receiptsList);
-        } catch (e) {
-            console.error(e);
-            utils.showToast("Error loading receipts", "error");
-        } finally {
-            utils.hideLoader();
-        }
-    },
-
-    populateViews: function(data) {
-        // Populate List
-        const tbody = document.getElementById('receipts-tbody');
-        tbody.innerHTML = '';
-        
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No receipts found.</td></tr>';
-        } else {
-            data.forEach(r => {
-                const tr = document.createElement('tr');
-                tr.className = 'clickable';
-                tr.onclick = () => this.openForm(r);
-                tr.innerHTML = `
-                    <td class="font-weight-600">${r.reference || 'Draft'}</td>
-                    <td>${r.receiveFrom || '-'}</td>
-                    <td>${utils.formatDate(r.scheduleDate)}</td>
-                    <td><span class="badge badge-${r.status.toLowerCase()}">${r.status}</span></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // Populate Kanban
-        const cols = {
-            'Draft': document.querySelector('#col-draft .k-cards'),
-            'Ready': document.querySelector('#col-ready .k-cards'),
-            'Done': document.querySelector('#col-done .k-cards'),
-            'Canceled': document.querySelector('#col-canceled .k-cards')
-        };
-        
-        Object.keys(cols).forEach(k => { if(cols[k]) cols[k].innerHTML = ''; });
-        const counts = { 'Draft':0, 'Ready':0, 'Done':0, 'Canceled':0 };
-
-        data.forEach(r => {
-            const stat = r.status;
-            if(cols[stat]) {
-                counts[stat]++;
-                const card = document.createElement('div');
-                card.className = 'kanban-card';
-                card.onclick = () => this.openForm(r);
-                card.innerHTML = `
-                    <div class="k-ref">${r.reference || 'Draft'}</div>
-                    <div class="k-contact">${r.receiveFrom || 'Unknown Contact'}</div>
-                    <div class="k-footer">
-                        <span>${utils.formatDate(r.scheduleDate)}</span>
-                        <span>${(r.lines || []).length} lines</span>
-                    </div>
-                `;
-                cols[stat].appendChild(card);
+            utils.showLoader();
+            try {
+                const user = window.fbAuth.currentUser;
+                if(user) {
+                    await window.fbDb.collection('users').doc(user.uid).update({
+                        name: nName
+                    });
+                    
+                    window.currentUser.name = nName;
+                    utils.showToast("تم تحديث الملف الشخصي بنجاح", "success");
+                    this.init(this.container); // re-render
+                }
+            } catch(err) {
+                utils.showToast(err.message, "error");
+            } finally {
+                utils.hideLoader();
             }
         });
 
-        // Update counts
-        Object.keys(counts).forEach(k => {
-            const el = document.querySelector(`#col-${k.toLowerCase()} h3 span`);
-            if(el) el.textContent = counts[k];
+        // Custom Logout Button event for this screen
+        document.getElementById('btn-logout-profile').addEventListener('click', async () => {
+            if (await utils.showConfirm("تسجيل الخروج", "هل أنت متأكد من رغبتك في تسجيل الخروج من CoreInventory؟")) {
+                if (window.fbAuth) {
+                    await window.fbAuth.signOut();
+                    utils.showToast("تم تسجيل الخروج بنجاح");
+                }
+            }
         });
-    },
 
-    openForm: async function(receipt = null) {
-        const isEdit = !!receipt;
-        const status = isEdit ? receipt.status : 'Draft';
-        const isReadOnly = (status === 'Done' || status === 'Canceled');
-
-        // Render Form Skeleton
-        this.container.innerHTML = `
-            <div class="view-header" style="margin-bottom:var(--spacing-sm); border:none; padding-bottom:0;">
-                <div class="view-header-left">
-                    <button class="btn btn-secondary" id="btn-back">← Back</button>
-                    ${status === 'Draft' ? `<button class="btn btn-primary" id="btn-mark-ready">Mark as Ready</button>` : ''}
-                    <h2 class="view-title" style="margin-left:var(--spacing-md)">Receipt</h2>
-                </div>
-            </div>
-            
-            <div class="doc-header" style="background:var(--surface); padding:var(--spacing-md); border:1px solid var(--border); border-bottom:none; border-radius:var(--border-radius) var(--border-radius) 0 0; margin-bottom:0; display:flex; align-items:center;">
-                <div style="flex:1;">
-                    ${status === 'Ready' && !isReadOnly ? `<button class="btn btn-success" id="btn-validate" style="background:var(--status-done); color:white; border:none; padding:0.5rem 1rem; border-radius:4px; margin-right:8px;">Validate</button>` : ''}
-                    <button class="btn btn-secondary" id="btn-print" ${!isReadOnly ? 'disabled' : ''}>Print</button>
-                    ${!isReadOnly ? `<button class="btn btn-secondary" id="btn-cancel">Cancel</button>` : ''}
-                </div>
-                
-                <div class="status-pipeline">
-                    <span class="step ${status === 'Draft' ? 'active' : ''}">Draft</span> >
-                    <span class="step ${status === 'Ready' ? 'active' : ''}">Ready</span> >
-                    <span class="step ${status === 'Done' ? 'active' : ''}">Done</span>
-                    ${status === 'Canceled' ? `<span class="step active" style="color:var(--status-canceled)">Canceled</span>` : ''}
-                </div>
-            </div>
-
-            <div class="form-document" style="border-top-left-radius:0; border-top-right-radius:0;">
-                <div class="doc-ref text-muted" style="margin-bottom:var(--spacing-md)">${isEdit ? receipt.reference : 'New'}</div>
-                
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Receive From</label>
-                        <input type="text" id="r-contact" value="${isEdit ? (receipt.receiveFrom || '') : ''}" ${isReadOnly ? 'disabled' : ''}>
-                    </div>
-                    <div class="form-group">
-                        <label>Schedule Date</label>
-                        <input type="date" id="r-date" value="${isEdit ? (receipt.scheduleDate || '') : new Date().toISOString().split('T')[0]}" ${isReadOnly ? 'disabled' : ''}>
-                    </div>
-                </div>
-                
-                <div class="form-group" style="max-width:300px;">
-                    <label>Responsible</label>
-                    <input type="text" value="${isEdit ? receipt.responsible : window.currentUser?.name}" disabled>
-                </div>
-
-                <div class="table-container lines-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Product</th>
-                                <th>Quantity</th>
-                                ${!isReadOnly ? '<th></th>' : ''}
-                            </tr>
-                        </thead>
-                        <tbody id="r-lines-tbody">
-                            <!-- Lines injected here -->
-                        </tbody>
-                        ${!isReadOnly ? `
-                        <tfoot>
-                            <tr>
-                                <td colspan="3"><a href="#" id="add-r-line"> + Add New product</a></td>
-                            </tr>
-                        </tfoot>` : ''}
-                    </table>
-                </div>
-                
-                ${!isReadOnly ? `
-                <div style="margin-top:var(--spacing-xl)">
-                    <button class="btn btn-primary" id="btn-save-draft">Save Changes</button>
-                </div>` : ''}
-            </div>
-        `;
-
-        // Load Products for Dropdown
-        let productOptions = [];
-        try {
-            const pSnap = await window.fbDb.collection('products').get();
-            pSnap.forEach(d => productOptions.push({id: d.id, ...d.data()}));
-        } catch(e) {}
-
-        const renderLine = (lineData, index) => {
-            const tr = document.createElement('tr');
-            
-            if(isReadOnly) {
-                tr.innerHTML = `
-                    <td>${lineData.productLabel}</td>
-                    <td>${lineData.quantity}</td>
-                `;
+        // Dark Mode Toggle Event
+        document.getElementById('toggle-dark-mode').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('coreInventoryTheme', 'dark');
             } else {
-                let opts = `<option value="">Select Product...</option>`;
-                productOptions.forEach(p => {
-                    const sel = (p.id === lineData.productId) ? 'selected' : '';
-                    opts += `<option value="${p.id}" ${sel}>[${p.sku}] ${p.name}</option>`;
-                });
-                
-                const selectId = `rline-prod-${index}`;
-                
-                tr.innerHTML = `
-                    <td class="editable" style="padding:0">
-                        <select id="${selectId}" style="border:none; border-radius:0; height:100%; width:100%; box-shadow:none; padding:0.75rem" required>${opts}</select>
-                    </td>
-                    <td class="editable" style="padding:0">
-                        <input type="number" class="rline-qty" value="${lineData.quantity || 1}" min="1" step="1" required style="border:none; border-radius:0; height:100%; padding:0.75rem;">
-                    </td>
-                    <td style="text-align:right; padding:0 1rem;">
-                        <button class="icon-btn text-error btn-remove-line" title="Remove Line">&times;</button>
-                    </td>
-                `;
-                
-                // Keep track of label selected
-                setTimeout(() => {
-                    const selElement = document.getElementById(selectId);
-                    if(selElement) {
-                        selElement.addEventListener('change', (e) => {
-                            const option = e.target.options[e.target.selectedIndex];
-                            tr.dataset.label = option.text;
-                        });
-                        tr.dataset.label = selElement.options[selElement.selectedIndex]?.text || '';
-                    }
-                }, 0);
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('coreInventoryTheme', 'light');
             }
-            return tr;
-        };
+        });
+    },
 
-        const tbody = document.getElementById('r-lines-tbody');
-        const lines = isEdit ? (receipt.lines || []) : [];
-        let lineCounter = 0;
-        
-        lines.forEach(l => tbody.appendChild(renderLine(l, lineCounter++)));
-
-        // Event Listeners
-        document.getElementById('btn-back').addEventListener('click', () => this.init(this.container));
-        
-        if(!isReadOnly) {
-            document.getElementById('add-r-line').addEventListener('click', (e) => {
-                e.preventDefault();
-                tbody.appendChild(renderLine({}, lineCounter++));
-            });
-
-            tbody.addEventListener('click', (e) => {
-                if(e.target.classList.contains('btn-remove-line')) {
-                    e.target.closest('tr').remove();
-                }
-            });
-
-            // Gather Data Function
-            const gatherData = () => {
-                const trs = tbody.querySelectorAll('tr');
-                const newLines = [];
-                trs.forEach(tr => {
-                    const sel = tr.querySelector('select');
-                    const qtyInp = tr.querySelector('.rline-qty');
-                    if(sel && sel.value && qtyInp) {
-                        newLines.push({
-                            productId: sel.value,
-                            productLabel: tr.dataset.label || sel.options[sel.selectedIndex].text,
-                            quantity: parseInt(qtyInp.value) || 0
-                        });
-                    }
-                });
-                return {
-                    receiveFrom: document.getElementById('r-contact').value.trim(),
-                    scheduleDate: document.getElementById('r-date').value,
-                    responsible: window.currentUser?.name || "System Admin",
-                    lines: newLines
-                };
-            };
-
-            const saveReceipt = async (newStatus) => {
-                utils.showLoader();
-                try {
-                    const db = window.fbDb;
-                    const data = gatherData();
-                    data.status = newStatus;
-                    
-                    if(data.lines.length === 0 && newStatus !== 'Canceled') throw new Error("At least one product line is required.");
-
-                    if(!isEdit) {
-                        // Create New
-                        const t = await db.runTransaction(async (transaction) => {
-                            const counterRef = db.collection('counters').doc('receipts');
-                            const counterDoc = await transaction.get(counterRef);
-                            let newCount = 1;
-                            if(counterDoc.exists) {
-                                newCount = (counterDoc.data().count || 0) + 1;
-                            }
-                            transaction.set(counterRef, { count: newCount }, { merge: true });
-                            
-                            const refStr = utils.formatReference('IN', newCount);
-                            data.reference = refStr;
-                            data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                            
-                            const newRecRef = db.collection('receipts').doc();
-                            transaction.set(newRecRef, data);
-                            return newRecRef.id;
-                        });
-                        utils.showToast("Receipt created", "success");
-                        this.openForm({id: t, ...data});
-                    } else {
-                        // Update existing
-                        await db.collection('receipts').doc(receipt.id).update(data);
-                        utils.showToast("Receipt updated", "success");
-                        receipt.status = newStatus;
-                        this.openForm(receipt);
-                    }
-                } catch(e) {
-                    utils.showToast(e.message, "error");
-                } finally {
-                    utils.hideLoader();
-                }
-            };
-
-            const saveDraftBtn = document.getElementById('btn-save-draft');
-            if(saveDraftBtn) saveDraftBtn.addEventListener('click', () => saveReceipt(status));
-
-            const markReadyBtn = document.getElementById('btn-mark-ready');
-            if(markReadyBtn) markReadyBtn.addEventListener('click', () => saveReceipt('Ready'));
-
-            const cancelBtn = document.getElementById('btn-cancel');
-            if(cancelBtn) cancelBtn.addEventListener('click', async () => {
-                const c = await utils.showConfirm("Cancel Receipt", "Are you sure you want to cancel this operation?");
-                if(c) saveReceipt('Canceled');
-            });
-
-            // VALIDATE (Done Logic)
-            const validateBtn = document.getElementById('btn-validate');
-            if(validateBtn) {
-                validateBtn.addEventListener('click', async () => {
-                    const data = gatherData();
-                    if(data.lines.length === 0) return utils.showToast("Cannot validate empty receipt", "error");
-                    
-                    const confirmed = await utils.showConfirm("Validate Receipt", "This will process the incoming stock permanently. Continue?");
-                    if(!confirmed) return;
-
-                    utils.showLoader();
-                    const db = window.fbDb;
-                    
-                    try {
-                        const batch = db.batch();
-                        // 1. Update Receipt Status
-                        data.status = 'Done';
-                        data.validatedAt = firebase.firestore.FieldValue.serverTimestamp();
-                        batch.update(db.collection('receipts').doc(receipt.id), data);
-                        
-                        // Default warehouse fallback
-                        const whId = data.warehouseId || (await db.collection('warehouses').limit(1).get()).docs[0].id;
-
-                        // 2. Process Lines for Stock and Ledger
-                        for(const line of data.lines) {
-                            // Find Stock Doc
-                            const sReq = await db.collection('stock')
-                                .where('productId', '==', line.productId)
-                                .where('warehouseId', '==', whId).get();
-                            
-                            if(sReq.empty) {
-                                // Create new stock
-                                const sRef = db.collection('stock').doc();
-                                batch.set(sRef, {
-                                    productId: line.productId,
-                                    productName: line.productLabel,
-                                    warehouseId: whId,
-                                    locationId: "",
-                                    onHand: line.quantity,
-                                    freeToUse: line.quantity,
-                                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                                });
-                            } else {
-                                // Update existing stock
-                                const sDoc = sReq.docs[0];
-                                const currentStock = sDoc.data().onHand || 0;
-                                const currentFree = sDoc.data().freeToUse || 0;
-                                batch.update(sDoc.ref, {
-                                    onHand: currentStock + line.quantity,
-                                    freeToUse: currentFree + line.quantity,
-                                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                                });
-                            }
-
-                            // Append Ledger
-                            const ledgerRef = db.collection('ledger').doc();
-                            batch.set(ledgerRef, {
-                                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                                type: "Receipt",
-                                reference: receipt.reference,
-                                productId: line.productId,
-                                productName: line.productLabel,
-                                contact: data.receiveFrom || 'Unknown',
-                                from: data.receiveFrom || 'Supplier',
-                                to: 'Warehouse',
-                                quantity: line.quantity,
-                                qtyChange: line.quantity,
-                                status: "Done"
-                            });
-                        }
-
-                        await batch.commit();
-                        utils.showToast("Receipt Validated Successfully", "success");
-                        // Refresh view
-                        receipt.status = 'Done';
-                        this.openForm(receipt);
-                        
-                    } catch(err) {
-                        utils.showToast(err.message, "error");
-                        console.error(err);
-                    } finally {
-                        utils.hideLoader();
-                    }
-                });
-            }
+    translateRole: function(role) {
+        switch (role) {
+            case 'Admin': return 'مدير النظام';
+            case 'Inventory Manager': return 'مدير مخازن';
+            case 'User': return 'مستخدم';
+            default: return role || 'مستخدم';
         }
-
-        const printBtn = document.getElementById('btn-print');
-        if(printBtn) printBtn.addEventListener('click', () => window.print());
     }
 };
