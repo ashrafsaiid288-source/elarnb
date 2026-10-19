@@ -1,5 +1,5 @@
 /**
- * Authentication Controller (Login, Signup, OTP, Logout)
+ * Authentication Controller (Login, Signup, OTP, Logout - Arabic Version)
  */
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Login Form Submit
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        if(!window.fbAuth) return utils.showToast("Firebase disabled", "error");
+        if(!window.fbAuth) return utils.showToast("خدمة Firebase غير مفعلة", "error");
         
         const loginId = document.getElementById('login-id').value.trim();
         const pwd = document.getElementById('login-password').value;
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Because Firebase Auth uses email, we map loginId to email using Firestore
             const snapshot = await window.fbDb.collection('users').where('loginId', '==', loginId).limit(1).get();
             if(snapshot.empty) {
-                errSpan.textContent = "Invalid Login Id or Password";
+                errSpan.textContent = "اسم المستخدم أو كلمة المرور غير صحيحة";
                 utils.hideLoader();
                 return;
             }
@@ -124,14 +124,14 @@ document.addEventListener('DOMContentLoaded', () => {
             utils.hideLoader();
         } catch (error) {
             utils.hideLoader();
-            errSpan.textContent = "Invalid Login Id or Password";
+            errSpan.textContent = "اسم المستخدم أو كلمة المرور غير صحيحة";
         }
     });
 
     // Google Sign-In
     if (btnGoogleLogin) {
         btnGoogleLogin.addEventListener('click', async () => {
-            if(!window.fbAuth) return utils.showToast("Firebase disabled", "error");
+            if(!window.fbAuth) return utils.showToast("خدمة Firebase غير مفعلة", "error");
             
             const provider = new firebase.auth.GoogleAuthProvider();
             utils.showLoader();
@@ -150,24 +150,23 @@ document.addEventListener('DOMContentLoaded', () => {
                         loginId: user.email.split('@')[0], // Use email prefix as default loginId
                         email: user.email,
                         name: user.displayName || user.email.split('@')[0],
-                        role: 'User',
+                        role: 'مستخدم',
                         avatar: user.photoURL || null,
                         createdAt: new Date()
                     };
                     await window.fbDb.collection('users').doc(user.uid).set(newUser);
                     window.currentUser = newUser;
-                    utils.showToast(`Welcome, ${newUser.name}!`, "success");
+                    utils.showToast(`أهلاً بك، ${newUser.name}!`, "success");
                 } else {
                     window.currentUser = userDoc.data();
-                    utils.showToast(`Welcome back, ${window.currentUser.name}!`, "success");
+                    utils.showToast(`مرحباً بعودتك، ${window.currentUser.name}!`, "success");
                 }
                 
                 utils.hideLoader();
             } catch (error) {
                 console.error("Google login error:", error);
                 utils.hideLoader();
-                // Friendly message for user, details in console
-                utils.showToast("Google authentication failed. Please try again.", "error");
+                utils.showToast("فشل تسجيل الدخول بواسطة Google. يرجى المحاولة مرة أخرى.", "error");
             }
         });
     }
@@ -186,16 +185,16 @@ document.addEventListener('DOMContentLoaded', () => {
         errSpan.textContent = '';
 
         // Validations
-        if(pwd !== pwd2) return errSpan.textContent = "Passwords do not match.";
+        if(pwd !== pwd2) return errSpan.textContent = "كلمتا المرور غير متطابقتين.";
         if(pwd.length < 8 || !/[A-Z]/.test(pwd) || !/[a-z]/.test(pwd) || !/[^a-zA-Z0-9]/.test(pwd)) {
-            return errSpan.textContent = "Password must be at least 8 chars, 1 uppercase, 1 lowercase, 1 special char.";
+            return errSpan.textContent = "يجب أن تتكون كلمة المرور من 8 خانات على الأقل، وتحتوي على حرف كبير، وحرف صغير، ورمز خاص.";
         }
 
         utils.showLoader();
         try {
             // Check if LoginId exists
             const s1 = await window.fbDb.collection('users').where('loginId', '==', loginId).limit(1).get();
-            if(!s1.empty) throw new Error("Login ID already mapped to an account.");
+            if(!s1.empty) throw new Error("اسم المستخدم محجوز بالفعل لحساب آخر.");
 
             // Create Firebase Auth User
             const userCredential = await window.fbAuth.createUserWithEmailAndPassword(email, pwd);
@@ -205,17 +204,20 @@ document.addEventListener('DOMContentLoaded', () => {
             await window.fbDb.collection('users').doc(user.uid).set({
                 loginId: loginId,
                 email: email,
-                name: loginId, // default name to loginId for now
-                role: "Inventory Manager",
+                name: loginId,
+                role: "مدير مخازن",
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
 
             utils.hideLoader();
-            utils.showToast("Account Created Successfully", "success");
-            // AuthState listener will redirect automatically
+            utils.showToast("تم إنشاء الحساب بنجاح", "success");
         } catch (error) {
             utils.hideLoader();
-            errSpan.textContent = error.message;
+            if (error.code === 'auth/email-already-in-use') {
+                errSpan.textContent = "البريد الإلكتروني مسجل بالفعل لمستخدم آخر.";
+            } else {
+                errSpan.textContent = error.message;
+            }
         }
     });
 
@@ -223,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnLogout) {
         btnLogout.addEventListener('click', async (e) => {
             e.preventDefault();
-            const confirmed = await utils.showConfirm("Logout", "Are you sure you want to log out?");
+            const confirmed = await utils.showConfirm("تسجيل الخروج", "هل أنت متأكد من رغبتك في تسجيل الخروج؟");
             if (confirmed && window.fbAuth) {
                 await window.fbAuth.signOut();
                 
@@ -231,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 loginForm.reset();
                 signupForm.reset();
                 
-                utils.showToast("Logged out successfully");
+                utils.showToast("تم تسجيل الخروج بنجاح");
             }
         });
     }
@@ -239,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- OTP & FORGOT PASSWORD FLOW ---
     linkForgot.addEventListener('click', (e) => {
         e.preventDefault();
-        loginForm.reset(); // clear
+        loginForm.reset();
         otpRequestForm.reset();
         otpVerifyForm.reset();
         newPasswordForm.reset();
@@ -265,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resetEmail = document.getElementById('otp-email').value;
         generatedOtp = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit random
         
-        utils.showConfirm("Simulated Email", `Your OTP is: ${generatedOtp}\n(In production this would be emailed)`).then(() => {
+        utils.showConfirm("رمز التحقق (تجريبي)", `رمز التحقق الخاص بك هو: ${generatedOtp}\n(في بيئة التشغيل الفعلية يتم إرسال هذا الرمز إلى بريدك الإلكتروني)`).then(() => {
             document.getElementById('reset-step-1').classList.add('hidden');
             document.getElementById('reset-step-2').classList.remove('hidden');
         });
@@ -279,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('reset-step-2').classList.add('hidden');
             document.getElementById('reset-step-3').classList.remove('hidden');
         } else {
-            document.getElementById('otp-error').textContent = "Incorrect OTP. Please try again.";
+            document.getElementById('otp-error').textContent = "رمز التحقق غير صحيح. يرجى إعادة المحاولة.";
         }
     });
 
@@ -290,20 +292,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const p2 = document.getElementById('reset-confirm-password').value;
         
         if (p1 !== p2) {
-            document.getElementById('reset-error').textContent = "Passwords do not match.";
+            document.getElementById('reset-error').textContent = "كلمتا المرور غير متطابقتين.";
             return;
         }
         
         try {
             utils.showLoader();
-            // Note: True password reset via Firebase requires their built-in email flow 
-            // `sendPasswordResetEmail`. Since we are using Firebase, we must rely on
-            // their secure email system rather than a simulated OTP direct change.
             if(window.fbAuth) {
                 await window.fbAuth.sendPasswordResetEmail(resetEmail);
             }
             utils.hideLoader();
-            utils.showToast("Cannot directly change password via simulated OTP. A real secure Firebase reset link has been sent to " + resetEmail, "info");
+            utils.showToast("تم إرسال رابط آمن لإعادة تعيين كلمة المرور إلى البريد: " + resetEmail, "info");
             
             // Go back to login
             otpScreen.classList.add('hidden');
