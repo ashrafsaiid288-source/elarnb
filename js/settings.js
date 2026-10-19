@@ -1,5 +1,5 @@
 /**
- * Settings Controller (Warehouses & Locations)
+ * Settings Controller (Warehouses & Locations - Arabic Version)
  */
 
 window.settingsWarehousesController = {
@@ -15,8 +15,8 @@ window.settingsWarehousesController = {
         this.container.innerHTML = `
             <div class="view-header">
                 <div class="view-header-left">
-                    <button class="btn btn-primary" id="btn-new-wh">NEW WAREHOUSE</button>
-                    <h2 class="view-title">Warehouses</h2>
+                    <button class="btn btn-primary" id="btn-new-wh">إضافة مستودع جديد</button>
+                    <h2 class="view-title">إدارة المستودعات والمخازن</h2>
                 </div>
             </div>
             
@@ -24,15 +24,15 @@ window.settingsWarehousesController = {
                 <table>
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Short Code</th>
-                            <th>Address</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th>اسم المستودع</th>
+                            <th>الكود التعريفي</th>
+                            <th>العنوان / الموقع</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody id="wh-tbody">
-                        <tr><td colspan="5" class="text-center text-muted">Loading warehouses...</td></tr>
+                        <tr><td colspan="5" class="text-center text-muted">جاري تحميل المستودعات...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -55,7 +55,7 @@ window.settingsWarehousesController = {
             this.populateTable(this.whList);
         } catch (e) {
             console.error(e);
-            utils.showToast("Error loading warehouses", "error");
+            utils.showToast("خطأ أثناء تحميل بيانات المستودعات", "error");
         } finally {
             utils.hideLoader();
         }
@@ -66,7 +66,7 @@ window.settingsWarehousesController = {
         tbody.innerHTML = '';
         
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No warehouses found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">لا توجد مستودعات مسجلة.</td></tr>';
             return;
         }
 
@@ -74,11 +74,11 @@ window.settingsWarehousesController = {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="font-weight-600">${w.name}</td>
-                <td>${w.shortCode}</td>
+                <td><strong>${w.shortCode}</strong></td>
                 <td>${w.address || '-'}</td>
-                <td><span class="badge badge-${w.isActive ? 'done' : 'canceled'}">${w.isActive ? 'Active' : 'Inactive'}</span></td>
+                <td><span class="badge badge-${w.isActive ? 'done' : 'canceled'}">${w.isActive ? 'نشط' : 'غير نشط'}</span></td>
                 <td>
-                    <button class="btn btn-secondary btn-sm edit-wh" data-id="${w.id}">Edit</button>
+                    <button class="btn btn-secondary btn-sm edit-wh" data-id="${w.id}">تعديل</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -104,33 +104,33 @@ window.settingsWarehousesController = {
         
         modal.innerHTML = `
             <div class="modal-header">
-                <div>${isEdit ? 'Edit Warehouse' : 'Create Warehouse'}</div>
+                <div>${isEdit ? 'تعديل بيانات المستودع' : 'إضافة مستودع جديد'}</div>
                 <button class="icon-btn" id="modal-close">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="wh-form">
                     <div class="form-group">
-                        <label>Warehouse Name <span class="text-error">*</span></label>
-                        <input type="text" id="w-name" value="${isEdit ? warehouse.name : ''}" required>
+                        <label>اسم المستودع <span class="text-error">*</span></label>
+                        <input type="text" id="w-name" value="${isEdit ? warehouse.name : ''}" placeholder="مثال: المستودع الرئيسي" required>
                     </div>
                     <div class="form-group">
-                        <label>Short Code <span class="text-error">*</span></label>
-                        <input type="text" id="w-code" value="${isEdit ? warehouse.shortCode : ''}" required maxlength="5" style="text-transform:uppercase">
+                        <label>الكود المختصر <span class="text-error">*</span></label>
+                        <input type="text" id="w-code" value="${isEdit ? warehouse.shortCode : ''}" required maxlength="5" style="text-transform:uppercase" placeholder="مثال: WH1">
                     </div>
                     <div class="form-group">
-                        <label>Address</label>
-                        <textarea id="w-address" rows="3">${isEdit ? (warehouse.address || '') : ''}</textarea>
+                        <label>العنوان / المكان</label>
+                        <textarea id="w-address" rows="3" placeholder="العنوان التفصيلي للمستودع">${isEdit ? (warehouse.address || '') : ''}</textarea>
                     </div>
                     <div class="form-group" style="flex-direction:row; align-items:center;">
                         <input type="checkbox" id="w-active" ${(!isEdit || warehouse.isActive) ? 'checked' : ''}>
-                        <label for="w-active" style="margin:0 0 0 8px;">Active</label>
+                        <label for="w-active" style="margin:0 8px 0 0;">المستودع نشط ويعمل حالياً</label>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                ${isEdit ? '<button class="btn btn-danger" style="margin-right:auto" id="btn-del-wh">Delete</button>' : ''}
-                <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
-                <button class="btn btn-primary" id="modal-save">Save</button>
+                ${isEdit ? '<button class="btn btn-danger" style="margin-left:auto" id="btn-del-wh">حذف المستودع</button>' : ''}
+                <button class="btn btn-secondary" id="modal-cancel">إلغاء</button>
+                <button class="btn btn-primary" id="modal-save">حفظ البيانات</button>
             </div>
         `;
         
@@ -160,11 +160,11 @@ window.settingsWarehousesController = {
                 
                 if(isEdit) {
                     await db.collection('warehouses').doc(warehouse.id).update(saveObj);
-                    utils.showToast("Warehouse updated");
+                    utils.showToast("تم تحديث بيانات المستودع بنجاح");
                 } else {
                     saveObj.createdAt = firebase.firestore.FieldValue.serverTimestamp();
                     await db.collection('warehouses').add(saveObj);
-                    utils.showToast("Warehouse created", "success");
+                    utils.showToast("تمت إضافة المستودع بنجاح", "success");
                 }
                 closeMod();
                 this.fetchData();
@@ -178,15 +178,14 @@ window.settingsWarehousesController = {
 
         if(isEdit) {
             document.getElementById('btn-del-wh').addEventListener('click', async () => {
-                // simple check
                 const stock = await window.fbDb.collection('stock').where('warehouseId', '==', warehouse.id).limit(1).get();
-                if(!stock.empty) return utils.showToast("Cannot delete: Warehouse contains stock.", "error");
+                if(!stock.empty) return utils.showToast("لا يمكن حذف المستودع: يحتوي على بضائع ومخزون مسجل.", "error");
 
-                if(await utils.showConfirm("Delete Warehouse", "Are you sure?")) {
+                if(await utils.showConfirm("حذف المستودع", "هل أنت متأكد من رغبتك في حذف هذا المستودع نهائياً؟")) {
                     utils.showLoader();
                     await window.fbDb.collection('warehouses').doc(warehouse.id).delete();
                     utils.hideLoader();
-                    utils.showToast("Warehouse deleted");
+                    utils.showToast("تم حذف المستودع بنجاح");
                     closeMod();
                     this.fetchData();
                 }
@@ -210,8 +209,8 @@ window.settingsLocationsController = {
         this.container.innerHTML = `
             <div class="view-header">
                 <div class="view-header-left">
-                    <button class="btn btn-primary" id="btn-new-loc">NEW LOCATION</button>
-                    <h2 class="view-title">Locations</h2>
+                    <button class="btn btn-primary" id="btn-new-loc">إضافة موقع تخزين جديد</button>
+                    <h2 class="view-title">مواقع وأرفف التخزين</h2>
                 </div>
             </div>
             
@@ -219,14 +218,14 @@ window.settingsLocationsController = {
                 <table>
                     <thead>
                         <tr>
-                            <th>Location Name</th>
-                            <th>Short Code</th>
-                            <th>Parent Warehouse</th>
-                            <th>Actions</th>
+                            <th>اسم الموقع / الرف</th>
+                            <th>الكود المختصر</th>
+                            <th>المستودع التابع له</th>
+                            <th>الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody id="loc-tbody">
-                        <tr><td colspan="4" class="text-center text-muted">Loading locations...</td></tr>
+                        <tr><td colspan="4" class="text-center text-muted">جاري تحميل مواقع التخزين...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -254,16 +253,15 @@ window.settingsLocationsController = {
                 const l = doc.data();
                 l.id = doc.id;
                 
-                // attach friendly warehouse name
                 const wh = this.warehouses.find(w => w.id === l.warehouseId);
-                l.whName = wh ? wh.name : 'Unknown';
+                l.whName = wh ? wh.name : 'غير محدد';
                 
                 this.locList.push(l);
             });
             this.populateTable(this.locList);
         } catch (e) {
             console.error(e);
-            utils.showToast("Error loading locations", "error");
+            utils.showToast("خطأ أثناء تحميل مواقع التخزين", "error");
         } finally {
             utils.hideLoader();
         }
@@ -274,7 +272,7 @@ window.settingsLocationsController = {
         tbody.innerHTML = '';
         
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No locations found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">لا توجد مواقع تخزين مسجلة.</td></tr>';
             return;
         }
 
@@ -282,10 +280,10 @@ window.settingsLocationsController = {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="font-weight-600">${l.name}</td>
-                <td>${l.shortCode}</td>
+                <td><strong>${l.shortCode}</strong></td>
                 <td>${l.whName}</td>
                 <td>
-                    <button class="btn btn-secondary btn-sm edit-loc" data-id="${l.id}">Edit</button>
+                    <button class="btn btn-secondary btn-sm edit-loc" data-id="${l.id}">تعديل</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -309,7 +307,7 @@ window.settingsLocationsController = {
         const modal = document.createElement('div');
         modal.className = 'modal-content';
 
-        let whOptions = '<option value="">Select Warehouse...</option>';
+        let whOptions = '<option value="">اختر المستودع...</option>';
         this.warehouses.forEach(w => {
             const sel = (isEdit && location.warehouseId === w.id) ? 'selected' : '';
             whOptions += `<option value="${w.id}" ${sel}>${w.name}</option>`;
@@ -317,29 +315,29 @@ window.settingsLocationsController = {
         
         modal.innerHTML = `
             <div class="modal-header">
-                <div>${isEdit ? 'Edit Location' : 'Create Location'}</div>
+                <div>${isEdit ? 'تعديل موقع التخزين' : 'إضافة موقع تخزين جديد'}</div>
                 <button class="icon-btn" id="modal-close-loc">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="loc-form">
                     <div class="form-group">
-                        <label>Location Name <span class="text-error">*</span></label>
-                        <input type="text" id="l-name" value="${isEdit ? location.name : ''}" required>
+                        <label>اسم الموقع أو الرف <span class="text-error">*</span></label>
+                        <input type="text" id="l-name" value="${isEdit ? location.name : ''}" placeholder="مثال: رف أ - 10" required>
                     </div>
                     <div class="form-group">
-                        <label>Short Code <span class="text-error">*</span></label>
-                        <input type="text" id="l-code" value="${isEdit ? location.shortCode : ''}" required maxlength="6" style="text-transform:uppercase">
+                        <label>الكود المختصر <span class="text-error">*</span></label>
+                        <input type="text" id="l-code" value="${isEdit ? location.shortCode : ''}" required maxlength="6" style="text-transform:uppercase" placeholder="مثال: LOC-A">
                     </div>
                     <div class="form-group">
-                        <label>Parent Warehouse <span class="text-error">*</span></label>
+                        <label>المستودع الرئيسي التابع له <span class="text-error">*</span></label>
                         <select id="l-wh" required>${whOptions}</select>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                ${isEdit ? '<button class="btn btn-danger" style="margin-right:auto" id="btn-del-loc">Delete</button>' : ''}
-                <button class="btn btn-secondary" id="modal-cancel-loc">Cancel</button>
-                <button class="btn btn-primary" id="modal-save-loc">Save</button>
+                ${isEdit ? '<button class="btn btn-danger" style="margin-left:auto" id="btn-del-loc">حذف الموقع</button>' : ''}
+                <button class="btn btn-secondary" id="modal-cancel-loc">إلغاء</button>
+                <button class="btn btn-primary" id="modal-save-loc">حفظ البيانات</button>
             </div>
         `;
         
@@ -368,11 +366,11 @@ window.settingsLocationsController = {
                 
                 if(isEdit) {
                     await db.collection('locations').doc(location.id).update(saveObj);
-                    utils.showToast("Location updated");
+                    utils.showToast("تم تحديث موقع التخزين بنجاح");
                 } else {
                     saveObj.createdAt = firebase.firestore.FieldValue.serverTimestamp();
                     await db.collection('locations').add(saveObj);
-                    utils.showToast("Location created", "success");
+                    utils.showToast("تمت إضافة موقع التخزين بنجاح", "success");
                 }
                 closeMod();
                 this.fetchData();
@@ -386,11 +384,11 @@ window.settingsLocationsController = {
 
         if(isEdit) {
             document.getElementById('btn-del-loc').addEventListener('click', async () => {
-                if(await utils.showConfirm("Delete Location", "Are you sure?")) {
+                if(await utils.showConfirm("حذف الموقع", "هل أنت متأكد من رغبتك في حذف هذا الموقع؟")) {
                     utils.showLoader();
                     await window.fbDb.collection('locations').doc(location.id).delete();
                     utils.hideLoader();
-                    utils.showToast("Location deleted");
+                    utils.showToast("تم حذف موقع التخزين بنجاح");
                     closeMod();
                     this.fetchData();
                 }
