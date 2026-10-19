@@ -1,5 +1,5 @@
 /**
- * Main Application Router and Global Logic
+ * Main Application Router and Global Logic (Arabic RTL Compatible)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -34,28 +34,29 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Remove active class from nav
         navLinks.forEach(l => l.classList.remove('active'));
+        document.querySelectorAll('#top-nav .dropdown .nav-item').forEach(p => p.classList.remove('active'));
         
         // Show target view
         const targetView = document.getElementById(`view-${routeName}`);
-        if(targetView) {
+        if (targetView) {
             targetView.classList.add('active');
         }
 
         // Highlight nav item (including parent dropdown if nested)
         const activeLink = document.querySelector(`[data-route="${routeName}"]`);
-        if(activeLink) {
+        if (activeLink) {
             activeLink.classList.add('active');
             let parentDropdown = activeLink.closest('.dropdown');
-            if(parentDropdown) {
+            if (parentDropdown) {
                 let parentLink = parentDropdown.querySelector('.nav-item');
-                if(parentLink && !parentLink.dataset.route) {
+                if (parentLink && !parentLink.dataset.route) {
                     parentLink.classList.add('active');
                 }
             }
         }
 
         // Initialize view controller if it exists
-        if(routes[routeName] && typeof routes[routeName].init === 'function') {
+        if (routes[routeName] && typeof routes[routeName].init === 'function') {
             routes[routeName].init(targetView);
         }
     }
@@ -65,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const route = link.dataset.route;
-            if(route) loadRoute(route);
+            if (route) loadRoute(route);
         });
     });
 
@@ -74,3 +75,4 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initial Load - Will be triggered by auth.js once login confirms
 });
+
