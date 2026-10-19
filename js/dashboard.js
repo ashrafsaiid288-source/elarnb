@@ -1,5 +1,5 @@
 /**
- * Dashboard View Controller
+ * Dashboard View Controller (Arabic Version)
  */
 
 window.dashboardController = {
@@ -9,39 +9,39 @@ window.dashboardController = {
         container.innerHTML = `
             <div class="view-header">
                 <div class="view-header-left">
-                    <h2 class="view-title">Dashboard</h2>
+                    <h2 class="view-title">لوحة التحكم</h2>
                 </div>
             </div>
             
             <div class="dashboard-grid">
                 <!-- Receipts Card -->
-                <div class="summary-card" id="card-receipts">
-                    <h3>Receipt</h3>
+                <div class="summary-card" id="card-receipts" style="cursor: pointer;">
+                    <h3>أذون الاستلام (الوارد)</h3>
                     <div class="huge-number" id="dash-receipt-pending">0</div>
                     <div class="stat-line">
-                        <span>Late</span>
+                        <span>متأخر</span>
                         <span id="dash-receipt-late" class="text-error">0</span>
                     </div>
                     <div class="stat-line">
-                        <span>Total Operations</span>
+                        <span>إجمالي العمليات</span>
                         <span id="dash-receipt-total">0</span>
                     </div>
                 </div>
 
                 <!-- Deliveries Card -->
-                <div class="summary-card" id="card-deliveries">
-                    <h3>Delivery</h3>
+                <div class="summary-card" id="card-deliveries" style="cursor: pointer;">
+                    <h3>أذون الصرف (المنصرف)</h3>
                     <div class="huge-number" id="dash-delivery-pending">0</div>
                     <div class="stat-line">
-                        <span>Late</span>
+                        <span>متأخر</span>
                         <span id="dash-delivery-late" class="text-error">0</span>
                     </div>
                     <div class="stat-line">
-                        <span>Waiting</span>
+                        <span>قيد الانتظار</span>
                         <span id="dash-delivery-waiting">0</span>
                     </div>
                     <div class="stat-line">
-                        <span>Total Operations</span>
+                        <span>إجمالي العمليات</span>
                         <span id="dash-delivery-total">0</span>
                     </div>
                 </div>
@@ -49,22 +49,22 @@ window.dashboardController = {
 
             <div class="table-container" style="margin-top: 1.5rem;">
                 <div style="padding: 1rem; border-bottom: 1px solid var(--border); font-weight: 600;">
-                    Recent Activity (Last 10)
+                    أحدث العمليات والحركات (آخر 10)
                 </div>
                 <table>
                     <thead>
                         <tr>
-                            <th>Reference</th>
-                            <th>Type</th>
-                            <th>Contact</th>
-                            <th>From</th>
-                            <th>To</th>
-                            <th>Quantity</th>
-                            <th>Status</th>
+                            <th>رقم المرجع / الإذن</th>
+                            <th>نوع العملية</th>
+                            <th>الجهة / العميل / المورد</th>
+                            <th>من</th>
+                            <th>إلى</th>
+                            <th>الكمية</th>
+                            <th>الحالة</th>
                         </tr>
                     </thead>
                     <tbody id="dash-activity-tbody">
-                        <tr><td colspan="7" class="text-center text-muted">Loading activity...</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted">جاري تحميل أحدث العمليات...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -72,19 +72,19 @@ window.dashboardController = {
             <!-- Analytics Chart -->
             <div class="table-container dash-chart-container" style="margin-top: 1.5rem; padding: 1.5rem;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-                    <span style="font-weight: 600; font-size: 1rem;">📊 Stock Movement Analytics</span>
+                    <span style="font-weight: 600; font-size: 1rem;">📊 تحليلات حركة المخزون</span>
                     <div style="display: flex; gap: 0.5rem;">
-                        <button class="btn btn-secondary chart-filter-btn active" data-type="all">All</button>
-                        <button class="btn btn-secondary chart-filter-btn" data-type="Receipt">Receipts</button>
-                        <button class="btn btn-secondary chart-filter-btn" data-type="Delivery">Deliveries</button>
-                        <button class="btn btn-secondary chart-filter-btn" data-type="Transfer">Transfers</button>
+                        <button class="btn btn-secondary chart-filter-btn active" data-type="all">الكل</button>
+                        <button class="btn btn-secondary chart-filter-btn" data-type="Receipt">أذون الاستلام</button>
+                        <button class="btn btn-secondary chart-filter-btn" data-type="Delivery">أذون الصرف</button>
+                        <button class="btn btn-secondary chart-filter-btn" data-type="Transfer">التحويلات</button>
                     </div>
                 </div>
                 <div style="position: relative; height: 280px;">
                     <canvas id="dash-chart"></canvas>
                 </div>
                 <p style="text-align: center; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">
-                    Last 30 days of stock movement activity
+                    حركة المخزون خلال آخر 30 يوماً
                 </p>
             </div>
         `;
@@ -96,6 +96,35 @@ window.dashboardController = {
     attachListeners: function() {
         document.getElementById('card-receipts').addEventListener('click', () => window.appRouter.loadRoute('receipts'));
         document.getElementById('card-deliveries').addEventListener('click', () => window.appRouter.loadRoute('deliveries'));
+    },
+
+    translateType: function(type) {
+        switch (type) {
+            case 'Receipt': return 'إذن استلام (وارد)';
+            case 'Delivery': return 'إذن صرف (منصرف)';
+            case 'Transfer': return 'تحويل داخلي';
+            case 'Adjustment': return 'تسوية مخزنية';
+            default: return type || '-';
+        }
+    },
+
+    translateStatus: function(status) {
+        switch (status) {
+            case 'Draft': return 'مسودة';
+            case 'Waiting': return 'قيد الانتظار';
+            case 'Ready': return 'جاهز';
+            case 'Done': return 'مكتمل';
+            case 'Cancelled': return 'ملغي';
+            default: return status || '-';
+        }
+    },
+
+    translateLocation: function(loc) {
+        if (!loc) return '-';
+        if (loc === 'Main Warehouse') return 'المستودع الرئيسي';
+        if (loc === 'Vendors' || loc === 'Suppliers') return 'الموردين';
+        if (loc === 'Customers') return 'العملاء';
+        return loc;
     },
 
     fetchData: async function() {
@@ -147,7 +176,7 @@ window.dashboardController = {
             tbody.innerHTML = '';
             
             if (ledgerSnap.empty) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No recent activity</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">لا توجد عمليات مسجلة حديثاً</td></tr>';
             } else {
                 ledgerSnap.forEach(doc => {
                     const data = doc.data();
@@ -159,13 +188,13 @@ window.dashboardController = {
                     const qtyStr = data.qtyChange > 0 ? `+${data.qtyChange}` : data.qtyChange.toString();
                     
                     tr.innerHTML = `
-                        <td class="font-weight-600">${data.reference}</td>
-                        <td>${data.type}</td>
+                        <td class="font-weight-600">${data.reference || '-'}</td>
+                        <td>${this.translateType(data.type)}</td>
                         <td>${data.contact || '-'}</td>
-                        <td>${data.from || '-'}</td>
-                        <td>${data.to || '-'}</td>
-                        <td>${qtyStr}</td>
-                        <td><span class="badge badge-${data.status.toLowerCase()}">${data.status}</span></td>
+                        <td>${this.translateLocation(data.from)}</td>
+                        <td>${this.translateLocation(data.to)}</td>
+                        <td dir="ltr" style="text-align: right;">${qtyStr}</td>
+                        <td><span class="badge badge-${(data.status || '').toLowerCase()}">${this.translateStatus(data.status)}</span></td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -186,7 +215,9 @@ window.dashboardController = {
 
         } catch (error) {
             console.error("Dashboard fetch error:", error);
-            utils.showToast("Error loading dashboard data", "error");
+            if (window.utils && utils.showToast) {
+                utils.showToast("خطأ أثناء تحميل بيانات لوحة التحكم", "error");
+            }
         }
     },
 
@@ -222,7 +253,7 @@ window.dashboardController = {
 
             const labels = Object.keys(dateMap).map(d => {
                 const dt = new Date(d);
-                return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+                return dt.toLocaleDateString('ar-EG', { day: '2-digit', month: 'short' });
             });
             const inData = Object.values(dateMap).map(v => v.in);
             const outData = Object.values(dateMap).map(v => v.out);
@@ -247,7 +278,7 @@ window.dashboardController = {
                     labels,
                     datasets: [
                         {
-                            label: 'Stock In',
+                            label: 'الوارد (إضافة للمخزن)',
                             data: inData,
                             backgroundColor: 'rgba(16, 185, 129, 0.7)',
                             borderColor: 'rgba(16, 185, 129, 1)',
@@ -255,7 +286,7 @@ window.dashboardController = {
                             borderRadius: 4,
                         },
                         {
-                            label: 'Stock Out',
+                            label: 'المنصرف (سحب من المخزن)',
                             data: outData,
                             backgroundColor: 'rgba(239, 68, 68, 0.65)',
                             borderColor: 'rgba(239, 68, 68, 1)',
@@ -270,7 +301,7 @@ window.dashboardController = {
                     interaction: { mode: 'index', intersect: false },
                     plugins: {
                         legend: {
-                            labels: { color: tickColor, font: { family: 'Inter', size: 12 } }
+                            labels: { color: tickColor, font: { family: 'Cairo', size: 12 } }
                         },
                         tooltip: {
                             backgroundColor: isDark ? '#1F2937' : '#fff',
@@ -278,17 +309,19 @@ window.dashboardController = {
                             bodyColor: isDark ? '#9CA3AF' : '#6B7280',
                             borderColor: isDark ? '#374151' : '#E5E7EB',
                             borderWidth: 1,
+                            titleFont: { family: 'Cairo' },
+                            bodyFont: { family: 'Cairo' }
                         }
                     },
                     scales: {
                         x: {
                             grid: { color: gridColor },
-                            ticks: { color: tickColor, font: { family: 'Inter', size: 10 }, maxRotation: 45 }
+                            ticks: { color: tickColor, font: { family: 'Cairo', size: 10 }, maxRotation: 45 }
                         },
                         y: {
                             beginAtZero: true,
                             grid: { color: gridColor },
-                            ticks: { color: tickColor, font: { family: 'Inter', size: 11 }, precision: 0 }
+                            ticks: { color: tickColor, font: { family: 'Cairo', size: 11 }, precision: 0 }
                         }
                     }
                 }
