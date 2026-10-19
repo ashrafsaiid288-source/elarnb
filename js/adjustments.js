@@ -1,5 +1,5 @@
 /**
- * Adjustments Controller (Inventory Adustments)
+ * Adjustments Controller (Inventory Adjustments - Arabic Version)
  */
 
 window.adjustmentsController = {
@@ -14,16 +14,33 @@ window.adjustmentsController = {
         this.fetchData();
     },
 
+    translateReason: function(reason) {
+        switch (reason) {
+            case 'Count Correction': return 'تصحيح جرد';
+            case 'Damaged': return 'تالف / هالك';
+            case 'Other': return 'أخرى';
+            default: return reason || '-';
+        }
+    },
+
+    translateStatus: function(status) {
+        switch (status) {
+            case 'Draft': return 'مسودة';
+            case 'Done': return 'مكتمل';
+            default: return status || '-';
+        }
+    },
+
     renderList: function() {
         this.container.innerHTML = `
             <div class="view-header">
                 <div class="view-header-left">
-                    <button class="btn btn-primary" id="btn-new-adj">NEW</button>
-                    <h2 class="view-title">Adjustments</h2>
+                    <button class="btn btn-primary" id="btn-new-adj">تسوية جديدة</button>
+                    <h2 class="view-title">تسويات المخزون (الجرد)</h2>
                 </div>
                 <div class="view-header-right">
                     <div class="search-container">
-                        <input type="text" id="adj-search" placeholder="Search ref or reason...">
+                        <input type="text" id="adj-search" placeholder="بحث برقم المرجع أو السبب...">
                     </div>
                 </div>
             </div>
@@ -32,16 +49,16 @@ window.adjustmentsController = {
                 <table>
                     <thead>
                         <tr>
-                            <th>Reference</th>
-                            <th>Warehouse</th>
-                            <th>Reason</th>
-                            <th>Lines</th>
-                            <th>Status</th>
-                            <th>Date</th>
+                            <th>رقم المرجع / الإذن</th>
+                            <th>المستودع</th>
+                            <th>سبب التسوية</th>
+                            <th>عدد الأصناف</th>
+                            <th>الحالة</th>
+                            <th>التاريخ</th>
                         </tr>
                     </thead>
                     <tbody id="adj-tbody">
-                        <tr><td colspan="6" class="text-center text-muted">Loading adjustments...</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted">جاري تحميل سجل التسويات...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -53,7 +70,8 @@ window.adjustmentsController = {
             const val = e.target.value.toLowerCase();
             const filtered = this.adjustmentsList.filter(a => 
                 (a.reference || '').toLowerCase().includes(val) || 
-                (a.reason || '').toLowerCase().includes(val)
+                (a.reason || '').toLowerCase().includes(val) ||
+                (this.translateReason(a.reason) || '').toLowerCase().includes(val)
             );
             this.populateTable(filtered);
         });
@@ -72,13 +90,13 @@ window.adjustmentsController = {
             snap.forEach(doc => {
                 const a = doc.data();
                 a.id = doc.id;
-                a.whName = whMap[a.warehouseId] || 'Unknown';
+                a.whName = whMap[a.warehouseId] || 'غير محدد';
                 this.adjustmentsList.push(a);
             });
             this.populateTable(this.adjustmentsList);
         } catch (e) {
             console.error(e);
-            utils.showToast("Error loading adjustments", "error");
+            utils.showToast("خطأ أثناء تحميل بيانات التسويات", "error");
         } finally {
             utils.hideLoader();
         }
@@ -89,7 +107,7 @@ window.adjustmentsController = {
         tbody.innerHTML = '';
         
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No adjustments found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">لا توجد تسويات مسجلة.</td></tr>';
             return;
         }
         
@@ -98,11 +116,11 @@ window.adjustmentsController = {
             tr.className = 'clickable';
             tr.onclick = () => this.openForm(a);
             tr.innerHTML = `
-                <td class="font-weight-600">${a.reference || 'Draft'}</td>
+                <td class="font-weight-600">${a.reference || 'مسودة'}</td>
                 <td>${a.whName}</td>
-                <td>${a.reason}</td>
+                <td>${this.translateReason(a.reason)}</td>
                 <td>${(a.lines || []).length}</td>
-                <td><span class="badge badge-${a.status.toLowerCase()}">${a.status}</span></td>
+                <td><span class="badge badge-${(a.status || '').toLowerCase()}">${this.translateStatus(a.status)}</span></td>
                 <td>${utils.formatDate(a.createdAt ? a.createdAt.toDate() : new Date().toISOString())}</td>
             `;
             tbody.appendChild(tr);
@@ -114,7 +132,7 @@ window.adjustmentsController = {
         const status = isEdit ? adj.status : 'Draft';
         const isReadOnly = (status === 'Done'); // Only Draft or Done
 
-        let whOptions = '<option value="">Select Warehouse...</option>';
+        let whOptions = '<option value="">اختر المستودع...</option>';
         try {
             const wSnap = await window.fbDb.collection('warehouses').get();
             wSnap.forEach(doc => {
@@ -125,37 +143,37 @@ window.adjustmentsController = {
         this.container.innerHTML = `
             <div class="view-header" style="margin-bottom:var(--spacing-sm); border:none; padding-bottom:0;">
                 <div class="view-header-left">
-                    <button class="btn btn-secondary" id="btn-back">← Back</button>
-                    <h2 class="view-title" style="margin-left:var(--spacing-md)">Adjustment</h2>
+                    <button class="btn btn-secondary" id="btn-back">← رجوع</button>
+                    <h2 class="view-title" style="margin-right:var(--spacing-md)">إذن تسوية مخزنية</h2>
                 </div>
             </div>
             
             <div class="doc-header" style="background:var(--surface); padding:var(--spacing-md); border:1px solid var(--border); border-bottom:none; border-radius:var(--border-radius) var(--border-radius) 0 0; margin-bottom:0; display:flex; align-items:center;">
                 <div style="flex:1;">
-                    ${status === 'Draft' ? `<button class="btn btn-success" id="btn-apply-adj" style="background:var(--status-done); color:white; border:none; padding:0.5rem 1rem; border-radius:4px; margin-right:8px;">Apply Adjustment</button>` : ''}
-                    ${status === 'Draft' ? `<button class="btn btn-secondary" id="btn-cancel">Cancel</button>` : ''}
+                    ${status === 'Draft' ? `<button class="btn btn-success" id="btn-apply-adj" style="background:var(--status-done); color:white; border:none; padding:0.5rem 1rem; border-radius:4px; margin-left:8px;">اعتماد وتطبيق التسوية</button>` : ''}
+                    ${status === 'Draft' ? `<button class="btn btn-secondary" id="btn-cancel">إلغاء</button>` : ''}
                 </div>
                 
                 <div class="status-pipeline">
-                    <span class="step ${status === 'Draft' ? 'active' : ''}">Draft</span> >
-                    <span class="step ${status === 'Done' ? 'active' : ''}">Done</span>
+                    <span class="step ${status === 'Draft' ? 'active' : ''}">مسودة</span> ←
+                    <span class="step ${status === 'Done' ? 'active' : ''}">مكتمل</span>
                 </div>
             </div>
 
             <div class="form-document" style="border-top-left-radius:0; border-top-right-radius:0;">
-                <div class="doc-ref text-muted" style="margin-bottom:var(--spacing-md)">${isEdit ? adj.reference : 'New'}</div>
+                <div class="doc-ref text-muted" style="margin-bottom:var(--spacing-md)">${isEdit ? adj.reference : 'جديد'}</div>
                 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>Warehouse</label>
+                        <label>المستودع</label>
                         <select id="a-wh" ${isReadOnly ? 'disabled' : ''}>${whOptions}</select>
                     </div>
                     <div class="form-group">
-                        <label>Reason</label>
+                        <label>سبب التسوية</label>
                         <select id="a-reason" ${isReadOnly ? 'disabled' : ''}>
-                            <option value="Count Correction" ${isEdit && adj.reason==='Count Correction'?'selected':''}>Count Correction</option>
-                            <option value="Damaged" ${isEdit && adj.reason==='Damaged'?'selected':''}>Damaged</option>
-                            <option value="Other" ${isEdit && adj.reason==='Other'?'selected':''}>Other</option>
+                            <option value="Count Correction" ${isEdit && adj.reason==='Count Correction'?'selected':''}>تصحيح جرد</option>
+                            <option value="Damaged" ${isEdit && adj.reason==='Damaged'?'selected':''}>تالف / هالك</option>
+                            <option value="Other" ${isEdit && adj.reason==='Other'?'selected':''}>أخرى</option>
                         </select>
                     </div>
                 </div>
@@ -164,17 +182,17 @@ window.adjustmentsController = {
                     <table>
                         <thead>
                             <tr>
-                                <th>Product</th>
-                                <th>System Qty</th>
-                                <th>Counted Qty</th>
-                                <th>Difference</th>
+                                <th>المنتج / الصنف</th>
+                                <th>رصيد النظام الحسابي</th>
+                                <th>الرصيد الفعلي (المعدود)</th>
+                                <th>الفارق (العجز / الزيادة)</th>
                             </tr>
                         </thead>
                         <tbody id="a-lines-tbody"></tbody>
                         ${!isReadOnly ? `
                         <tfoot>
                             <tr>
-                                <td colspan="4"><a href="#" id="add-a-line"> + Add New product</a></td>
+                                <td colspan="4"><a href="#" id="add-a-line"> + إضافة صنف آخر للتسوية</a></td>
                             </tr>
                         </tfoot>` : ''}
                     </table>
@@ -214,7 +232,7 @@ window.adjustmentsController = {
             
             tr.dataset.sysQty = sysQty;
             
-            const dpHTML = `<span class="diff-val" style="font-weight:600; color:${diff > 0 ? 'var(--status-done)' : (diff < 0 ? 'var(--status-canceled)' : 'inherit')}">${diff > 0 ? '+'+diff : diff}</span>`;
+            const dpHTML = `<span class="diff-val" dir="ltr" style="font-weight:600; color:${diff > 0 ? 'var(--status-done)' : (diff < 0 ? 'var(--status-canceled)' : 'inherit')}">${diff > 0 ? '+'+diff : diff}</span>`;
 
             if(isReadOnly) {
                 tr.innerHTML = `
@@ -224,7 +242,7 @@ window.adjustmentsController = {
                     <td>${dpHTML}</td>
                 `;
             } else {
-                let opts = `<option value="">Select Product...</option>`;
+                let opts = `<option value="">اختر المنتج...</option>`;
                 productOptions.forEach(p => {
                     const sel = (p.id === lineData.productId) ? 'selected' : '';
                     opts += `<option value="${p.id}" ${sel}>[${p.sku}] ${p.name}</option>`;
@@ -235,11 +253,11 @@ window.adjustmentsController = {
                     <td class="editable" style="padding:0">
                         <select id="${selectId}" style="border:none; height:100%; width:100%; padding:0.75rem" required>${opts}</select>
                     </td>
-                    <td class="sys-val" style="padding-left:1rem">${sysQty}</td>
+                    <td class="sys-val" style="padding-right:1rem">${sysQty}</td>
                     <td class="editable" style="padding:0">
                         <input type="number" class="aline-count" value="${cntQty}" min="0" required style="border:none; height:100%; padding:0.75rem;">
                     </td>
-                    <td style="padding-left:1rem">${dpHTML}</td>
+                    <td style="padding-right:1rem">${dpHTML}</td>
                 `;
                 
                 setTimeout(() => {
@@ -306,10 +324,10 @@ window.adjustmentsController = {
                     });
 
                     const wId = document.getElementById('a-wh').value;
-                    if(!wId) return utils.showToast("Please select a warehouse", "error");
-                    if(newLines.length === 0) return utils.showToast("No products added", "error");
+                    if(!wId) return utils.showToast("يرجى اختيار المستودع أولاً", "error");
+                    if(newLines.length === 0) return utils.showToast("لم يتم إضافة أي أصناف للتسوية", "error");
 
-                    const confirmed = await utils.showConfirm("Apply Adjustment", "This will replace current stock counts permanently. Continue?");
+                    const confirmed = await utils.showConfirm("اعتماد التسوية", "سيؤدي هذا الإجراء إلى تحديث أرصدة المخزون الحالية بشكل نهائي. هل تريد المتابعة؟");
                     if(!confirmed) return;
 
                     utils.showLoader();
@@ -347,7 +365,7 @@ window.adjustmentsController = {
                                 // We are REPLACING the value, not summing
                                 batch.update(sDoc.ref, {
                                     onHand: line.countedQty,
-                                    freeToUse: (sDoc.data().freeToUse || 0) + line.difference, // adjust freeToUse relative to diff
+                                    freeToUse: (sDoc.data().freeToUse || 0) + line.difference,
                                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                                 });
                             }
@@ -359,8 +377,8 @@ window.adjustmentsController = {
                                 reference: aRefStr,
                                 productId: line.productId,
                                 productName: line.productLabel,
-                                contact: "Inventory Count",
-                                from: "Warehouse", to: "Warehouse",
+                                contact: "جرد تسوية مخزنية",
+                                from: "المستودع", to: "المستودع",
                                 quantity: Math.abs(line.difference),
                                 qtyChange: line.difference,
                                 status: "Done"
@@ -380,7 +398,7 @@ window.adjustmentsController = {
                         batch.set(db.collection('adjustments').doc(docId), adjData, { merge: true });
                         
                         await batch.commit();
-                        utils.showToast("Stock Adjustment Applied", "success");
+                        utils.showToast("تم تطبيق واعتماد التسوية المخزنية بنجاح", "success");
                         this.openForm({id: docId, ...adjData});
 
                     } catch(err) {
