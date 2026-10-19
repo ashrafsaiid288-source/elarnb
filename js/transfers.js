@@ -1,5 +1,5 @@
 /**
- * Internal Transfers Controller (Location changes)
+ * Internal Transfers Controller (Location changes - Arabic Version)
  */
 
 window.transfersController = {
@@ -11,16 +11,26 @@ window.transfersController = {
         this.fetchData();
     },
 
+    translateStatus: function(status) {
+        switch (status) {
+            case 'Draft': return 'مسودة';
+            case 'Ready': return 'جاهز للتحويل';
+            case 'Done': return 'مكتمل';
+            case 'Canceled': return 'ملغي';
+            default: return status || '-';
+        }
+    },
+
     renderList: function() {
         this.container.innerHTML = `
             <div class="view-header">
                 <div class="view-header-left">
-                    <button class="btn btn-primary" id="btn-new-transfer">NEW</button>
-                    <h2 class="view-title">Internal Transfers</h2>
+                    <button class="btn btn-primary" id="btn-new-transfer">إذن تحويل جديد</button>
+                    <h2 class="view-title">التحويلات الداخلية بين المخازن</h2>
                 </div>
                 <div class="view-header-right">
                     <div class="search-container">
-                        <input type="text" id="transfer-search" placeholder="Search ref...">
+                        <input type="text" id="transfer-search" placeholder="بحث برقم الإذن...">
                     </div>
                 </div>
             </div>
@@ -29,15 +39,15 @@ window.transfersController = {
                 <table>
                     <thead>
                         <tr>
-                            <th>Reference</th>
-                            <th>From</th>
-                            <th>To</th>
-                            <th>Schedule Date</th>
-                            <th>Status</th>
+                            <th>رقم المرجع / الإذن</th>
+                            <th>من مستودع</th>
+                            <th>إلى مستودع</th>
+                            <th>التاريخ المقرر</th>
+                            <th>الحالة</th>
                         </tr>
                     </thead>
                     <tbody id="transfers-tbody">
-                        <tr><td colspan="5" class="text-center text-muted">Loading transfers...</td></tr>
+                        <tr><td colspan="5" class="text-center text-muted">جاري تحميل أذون التحويل...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -47,7 +57,12 @@ window.transfersController = {
         
         document.getElementById('transfer-search').addEventListener('input', (e) => {
             const val = e.target.value.toLowerCase();
-            const filtered = this.transfersList.filter(t => (t.reference || '').toLowerCase().includes(val));
+            const filtered = this.transfersList.filter(t => 
+                (t.reference || '').toLowerCase().includes(val) ||
+                (t.fromName || '').toLowerCase().includes(val) ||
+                (t.toName || '').toLowerCase().includes(val) ||
+                (this.translateStatus(t.status) || '').toLowerCase().includes(val)
+            );
             this.populateTable(filtered);
         });
     },
@@ -66,14 +81,14 @@ window.transfersController = {
             snap.forEach(doc => {
                 const t = doc.data();
                 t.id = doc.id;
-                t.fromName = whMap[t.fromWarehouseId] || 'Unknown';
-                t.toName = whMap[t.toWarehouseId] || 'Unknown';
+                t.fromName = whMap[t.fromWarehouseId] || 'مستودع غير محدد';
+                t.toName = whMap[t.toWarehouseId] || 'مستودع غير محدد';
                 this.transfersList.push(t);
             });
             this.populateTable(this.transfersList);
         } catch (e) {
             console.error(e);
-            utils.showToast("Error loading transfers", "error");
+            utils.showToast("خطأ أثناء تحميل بيانات التحويلات الداخلية", "error");
         } finally {
             utils.hideLoader();
         }
@@ -84,7 +99,7 @@ window.transfersController = {
         tbody.innerHTML = '';
         
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No internal transfers found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">لا توجد تحويلات داخلية مسجلة.</td></tr>';
             return;
         }
         
@@ -93,11 +108,11 @@ window.transfersController = {
             tr.className = 'clickable';
             tr.onclick = () => this.openForm(t);
             tr.innerHTML = `
-                <td class="font-weight-600">${t.reference || 'Draft'}</td>
+                <td class="font-weight-600">${t.reference || 'مسودة'}</td>
                 <td>${t.fromName}</td>
                 <td>${t.toName}</td>
                 <td>${utils.formatDate(t.scheduleDate)}</td>
-                <td><span class="badge badge-${t.status.toLowerCase()}">${t.status}</span></td>
+                <td><span class="badge badge-${(t.status || '').toLowerCase()}">${this.translateStatus(t.status)}</span></td>
             `;
             tbody.appendChild(tr);
         });
@@ -108,7 +123,7 @@ window.transfersController = {
         const status = isEdit ? transfer.status : 'Draft';
         const isReadOnly = (status === 'Done' || status === 'Canceled');
 
-        let whOptions = '<option value="">Select Warehouse...</option>';
+        let whOptions = '<option value="">اختر المستودع...</option>';
         try {
             const wSnap = await window.fbDb.collection('warehouses').get();
             wSnap.forEach(doc => {
@@ -119,42 +134,42 @@ window.transfersController = {
         this.container.innerHTML = `
             <div class="view-header" style="margin-bottom:var(--spacing-sm); border:none; padding-bottom:0;">
                 <div class="view-header-left">
-                    <button class="btn btn-secondary" id="btn-back">← Back</button>
-                    ${status === 'Draft' ? `<button class="btn btn-primary" id="btn-mark-ready">Mark as Ready</button>` : ''}
-                    <h2 class="view-title" style="margin-left:var(--spacing-md)">Internal Transfer</h2>
+                    <button class="btn btn-secondary" id="btn-back">← رجوع</button>
+                    ${status === 'Draft' ? `<button class="btn btn-primary" id="btn-mark-ready">تحديد كـ جاهز</button>` : ''}
+                    <h2 class="view-title" style="margin-right:var(--spacing-md)">إذن تحويل بضاعة داخلي</h2>
                 </div>
             </div>
             
             <div class="doc-header" style="background:var(--surface); padding:var(--spacing-md); border:1px solid var(--border); border-bottom:none; border-radius:var(--border-radius) var(--border-radius) 0 0; margin-bottom:0; display:flex; align-items:center;">
                 <div style="flex:1;">
-                    ${status === 'Ready' && !isReadOnly ? `<button class="btn btn-success" id="btn-validate" style="background:var(--status-done); color:white; border:none; padding:0.5rem 1rem; border-radius:4px; margin-right:8px;">Validate</button>` : ''}
-                    <button class="btn btn-secondary" id="btn-print" ${!isReadOnly ? 'disabled' : ''}>Print</button>
-                    ${!isReadOnly ? `<button class="btn btn-secondary" id="btn-cancel">Cancel</button>` : ''}
+                    ${status === 'Ready' && !isReadOnly ? `<button class="btn btn-success" id="btn-validate" style="background:var(--status-done); color:white; border:none; padding:0.5rem 1rem; border-radius:4px; margin-left:8px;">اعتماد ونقل البضاعة</button>` : ''}
+                    <button class="btn btn-secondary" id="btn-print" ${!isReadOnly ? 'disabled' : ''}>طباعة</button>
+                    ${!isReadOnly ? `<button class="btn btn-secondary" id="btn-cancel">إلغاء الإذن</button>` : ''}
                 </div>
                 
                 <div class="status-pipeline">
-                    <span class="step ${status === 'Draft' ? 'active' : ''}">Draft</span> >
-                    <span class="step ${status === 'Ready' ? 'active' : ''}">Ready</span> >
-                    <span class="step ${status === 'Done' ? 'active' : ''}">Done</span>
+                    <span class="step ${status === 'Draft' ? 'active' : ''}">مسودة</span> ←
+                    <span class="step ${status === 'Ready' ? 'active' : ''}">جاهز</span> ←
+                    <span class="step ${status === 'Done' ? 'active' : ''}">مكتمل</span>
                 </div>
             </div>
 
             <div class="form-document" style="border-top-left-radius:0; border-top-right-radius:0;">
-                <div class="doc-ref text-muted" style="margin-bottom:var(--spacing-md)">${isEdit ? transfer.reference : 'New'}</div>
+                <div class="doc-ref text-muted" style="margin-bottom:var(--spacing-md)">${isEdit ? transfer.reference : 'جديد'}</div>
                 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>From Warehouse</label>
+                        <label>من مستودع (المصدر)</label>
                         <select id="t-from-wh" ${isReadOnly ? 'disabled' : ''}>${whOptions}</select>
                     </div>
                     <div class="form-group">
-                        <label>To Warehouse</label>
+                        <label>إلى مستودع (الوجهة)</label>
                         <select id="t-to-wh" ${isReadOnly ? 'disabled' : ''}>${whOptions}</select>
                     </div>
                 </div>
                 
                 <div class="form-group" style="max-width:300px;">
-                    <label>Schedule Date</label>
+                    <label>تاريخ التحويل المقرر</label>
                     <input type="date" id="t-date" value="${isEdit ? (transfer.scheduleDate || '') : new Date().toISOString().split('T')[0]}" ${isReadOnly ? 'disabled' : ''}>
                 </div>
 
@@ -162,16 +177,16 @@ window.transfersController = {
                     <table>
                         <thead>
                             <tr>
-                                <th>Product</th>
-                                <th>Quantity</th>
-                                ${!isReadOnly ? '<th></th>' : ''}
+                                <th>المنتج / الصنف</th>
+                                <th>الكمية المنقولة</th>
+                                ${!isReadOnly ? '<th>إجراء</th>' : ''}
                             </tr>
                         </thead>
                         <tbody id="t-lines-tbody"></tbody>
                         ${!isReadOnly ? `
                         <tfoot>
                             <tr>
-                                <td colspan="3"><a href="#" id="add-t-line"> + Add New product</a></td>
+                                <td colspan="3"><a href="#" id="add-t-line"> + إضافة صنف آخر للتحويل</a></td>
                             </tr>
                         </tfoot>` : ''}
                     </table>
@@ -179,7 +194,7 @@ window.transfersController = {
                 
                 ${!isReadOnly ? `
                 <div style="margin-top:var(--spacing-xl)">
-                    <button class="btn btn-primary" id="btn-save-draft">Save Changes</button>
+                    <button class="btn btn-primary" id="btn-save-draft">حفظ التغييرات</button>
                 </div>` : ''}
             </div>
         `;
@@ -200,7 +215,7 @@ window.transfersController = {
             if(isReadOnly) {
                 tr.innerHTML = `<td>${lineData.productLabel}</td><td>${lineData.quantity}</td>`;
             } else {
-                let opts = `<option value="">Select Product...</option>`;
+                let opts = `<option value="">اختر المنتج...</option>`;
                 productOptions.forEach(p => {
                     const sel = (p.id === lineData.productId) ? 'selected' : '';
                     opts += `<option value="${p.id}" ${sel}>[${p.sku}] ${p.name}</option>`;
@@ -213,8 +228,8 @@ window.transfersController = {
                     <td class="editable" style="padding:0">
                         <input type="number" class="tline-qty" value="${lineData.quantity || 1}" min="1" required style="border:none; height:100%; padding:0.75rem;">
                     </td>
-                    <td style="text-align:right; padding:0 1rem;">
-                        <button class="icon-btn text-error btn-remove-line">&times;</button>
+                    <td style="text-align:center; padding:0 1rem;">
+                        <button type="button" class="icon-btn text-error btn-remove-line" style="cursor:pointer;" title="حذف">&times;</button>
                     </td>
                 `;
                 setTimeout(() => {
@@ -276,8 +291,8 @@ window.transfersController = {
                     const data = gatherData();
                     data.status = newStatus;
                     
-                    if(!data.fromWarehouseId || !data.toWarehouseId) throw new Error("Please select both warehouses.");
-                    if(data.fromWarehouseId === data.toWarehouseId) throw new Error("Source and destination warehouse cannot be the same.");
+                    if(!data.fromWarehouseId || !data.toWarehouseId) throw new Error("يرجى اختيار مستودع المصدر ومستودع الوجهة.");
+                    if(data.fromWarehouseId === data.toWarehouseId) throw new Error("لا يمكن أن يكون مستودع المصدر هو نفسه مستودع الوجهة.");
                     
                     if(!isEdit) {
                         const tId = await db.runTransaction(async (tr) => {
@@ -293,11 +308,11 @@ window.transfersController = {
                             tr.set(newRef, data);
                             return newRef.id;
                         });
-                        utils.showToast("Transfer saved", "success");
+                        utils.showToast("تم حفظ إذن التحويل بنجاح", "success");
                         this.openForm({id: tId, ...data});
                     } else {
                         await db.collection('transfers').doc(transfer.id).update(data);
-                        utils.showToast("Transfer updated", "success");
+                        utils.showToast("تم تحديث إذن التحويل بنجاح", "success");
                         transfer.status = newStatus;
                         this.openForm(transfer);
                     }
@@ -319,7 +334,7 @@ window.transfersController = {
 
             const cancelBtn = document.getElementById('btn-cancel');
             if(cancelBtn) cancelBtn.addEventListener('click', async () => {
-                if(await utils.showConfirm("Cancel Transfer", "Are you sure?")) saveTransfer('Canceled');
+                if(await utils.showConfirm("إلغاء التحويل", "هل أنت متأكد من رغبتك في إلغاء إذن التحويل هذا؟")) saveTransfer('Canceled');
             });
 
             // VALIDATE LOGIC
@@ -327,9 +342,9 @@ window.transfersController = {
             if(validateBtn) {
                 validateBtn.addEventListener('click', async () => {
                     const data = gatherData();
-                    if(data.lines.length === 0) return utils.showToast("No products to transfer", "error");
+                    if(data.lines.length === 0) return utils.showToast("يرجى إضافة أصناف للتحويل أولاً", "error");
                     
-                    if(!await utils.showConfirm("Validate", "Move stock to destination warehouse?")) return;
+                    if(!await utils.showConfirm("اعتماد التحويل", "هل أنت متأكد من نقل رصيد المخزون فعلياً إلى المستودع المحدد؟")) return;
 
                     utils.showLoader();
                     const db = window.fbDb;
@@ -347,7 +362,7 @@ window.transfersController = {
                             const fromOnHand = sFromReq.empty ? 0 : (sFromReq.docs[0].data().onHand || 0);
                             
                             if (fromOnHand < line.quantity) {
-                                throw new Error(`Insufficient stock for ${line.productLabel} in Source Warehouse.`);
+                                throw new Error(`الرصيد المتاح غير كافٍ للصنف (${line.productLabel}) في مستودع المصدر. الرصيد المتاح: ${fromOnHand}، والمطلوب: ${line.quantity}`);
                             }
                             
                             // Deduct From Location
@@ -391,7 +406,7 @@ window.transfersController = {
                             
                             batch.set(db.collection('ledger').doc(), {
                                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                                type: "Transfer", reference: transfer.reference + ' (IN)',
+                                type: "Transfer", reference: transfer.reference + ' (وارد)',
                                 productId: line.productId, productName: line.productLabel,
                                 contact: `${fmName} ➔ ${tmName}`,
                                 from: fmName, to: tmName,
@@ -404,7 +419,7 @@ window.transfersController = {
                         batch.update(db.collection('transfers').doc(transfer.id), data);
 
                         await batch.commit();
-                        utils.showToast("Internal Transfer Completed", "success");
+                        utils.showToast("تم إتمام عملية التحويل الداخلي بنجاح", "success");
                         transfer.status = 'Done';
                         this.openForm(transfer);
 
