@@ -1,224 +1,209 @@
 /**
- * Stock Overview Controller (Arabic Version)
+ * Stock Controller with Real-Time Instant Search & Barcode Support
  */
 
 window.stockController = {
-    stockList: [],
-    whMap: {},
-    prMap: {},
+    allStock: [],
+    filteredStock: [],
 
     init: async function(container) {
         this.container = container;
-        this.renderList();
-        this.fetchData();
+        this.renderLayout();
+        await this.fetchData();
+        this.attachSearchEvents();
     },
 
-    renderList: function() {
+    renderLayout: function() {
         this.container.innerHTML = `
             <div class="view-header">
                 <div class="view-header-left">
-                    <h2 class="view-title">أرصدة المخزون الحالي</h2>
+                    <h2 class="view-title">المخزون الحالي والأرصدة</h2>
                 </div>
                 <div class="view-header-right">
-                    <div class="search-container">
-                        <input type="text" id="stock-search" placeholder="بحث باسم المنتج، الكود، أو المستودع...">
+                    <!-- حقل البحث الفوري والباركود -->
+                    <div class="search-container expanded">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--text-muted); margin-left: 6px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <input type="text" id="stock-instant-search" placeholder="ابحث بالاسم، أو امسح الباركود / SKU..." autocomplete="off">
+                        <button id="btn-clear-stock-search" class="icon-btn hidden" title="مسح البحث" style="font-size: 1rem; border:none; background:none; cursor:pointer;">✕</button>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- معلومات الفلترة الحالية وحالة الماسح -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.88rem;">
+                <span id="stock-count-label">جاري حصر الأرصدة...</span>
+                <span style="font-size: 0.8rem; background: var(--surface-hover); padding: 0.25rem 0.65rem; border-radius: 6px; border: 1px solid var(--border);">
+                    ⚡ يدعم المسح المباشر بماسح الباركود
+                </span>
+            </div>
+
+            <!-- جدول الأرصدة الفعلي -->
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>المنتج / الصنف</th>
-                            <th>كود الصنف (SKU)</th>
+                            <th>الباركود / SKU</th>
+                            <th>اسم الصنف</th>
                             <th>المستودع</th>
-                            <th>موقع التخزين / الرف</th>
-                            <th>الرصيد الفعلي (المتاح)</th>
-                            <th>القابل للصرف والاستخدام</th>
+                            <th>الرصيد الفعلي (On Hand)</th>
+                            <th>المتاح للصرف (Free)</th>
                             <th>حالة المخزون</th>
-                            <th>الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody id="stock-tbody">
-                        <tr><td colspan="8" class="text-center text-muted">جاري تحميل بيانات أرصدة المخزون...</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted" style="padding: 2rem;">جاري تحميل أرصدة المخازن...</td></tr>
                     </tbody>
                 </table>
             </div>
-
-            <!-- Inline Stock Edit Modal -->
-            <div id="stock-edit-modal" class="modal-overlay hidden">
-                <div class="modal-box" style="max-width: 420px;">
-                    <div class="modal-header">
-                        <h3 id="stock-edit-title">تعديل الرصيد</h3>
-                        <button class="btn-close" id="stock-edit-close">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label>المنتج</label>
-                            <input type="text" id="stock-edit-product-name" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label>المستودع</label>
-                            <input type="text" id="stock-edit-wh-name" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label for="stock-edit-onhand">الكمية الفعلية بالمخزن (On Hand)</label>
-                            <input type="number" id="stock-edit-onhand" min="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="stock-edit-free">الكمية القابلة للصرف والاستخدام (Free to Use)</label>
-                            <input type="number" id="stock-edit-free" min="0" required>
-                        </div>
-                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">
-                            ⚠️ التعديل اليدوي المباشر هنا يتجاوز مسار القيود الافتراضي. للحفاظ على سجل تدقيق محاسبي متكامل، يفضل استخدام قسم "تسويات المخزون".
-                        </p>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" id="stock-edit-cancel">إلغاء</button>
-                        <button class="btn btn-primary" id="stock-edit-save">حفظ التغييرات</button>
-                    </div>
-                </div>
-            </div>
         `;
-
-        document.getElementById('stock-search').addEventListener('input', (e) => {
-            const val = e.target.value.toLowerCase();
-            const filtered = this.stockList.filter(s => 
-                (s.productName || '').toLowerCase().includes(val) || 
-                (s.productSku || '').toLowerCase().includes(val) ||
-                (s.whName || '').toLowerCase().includes(val)
-            );
-            this.populateTable(filtered);
-        });
-
-        // Modal close
-        document.getElementById('stock-edit-close').addEventListener('click', () => this.closeModal());
-        document.getElementById('stock-edit-cancel').addEventListener('click', () => this.closeModal());
-        document.getElementById('stock-edit-save').addEventListener('click', () => this.saveEdit());
     },
 
     fetchData: async function() {
         if (!window.fbDb) return;
-        utils.showLoader();
-        try {
-            const whSnap = await window.fbDb.collection('warehouses').get();
-            this.whMap = {};
-            whSnap.forEach(d => this.whMap[d.id] = d.data().name);
+        if (window.utils && window.utils.showLoader) utils.showLoader();
 
-            const prSnap = await window.fbDb.collection('products').get();
-            this.prMap = {};
-            const prReorderMap = {};
-            prSnap.forEach(d => {
-                this.prMap[d.id] = d.data().sku;
-                prReorderMap[d.id] = d.data().reorderLevel || 0;
+        try {
+            // جلب المخزون والمنتجات والمستودعات في نفس الوقت
+            const [stockSnap, products, warehouses] = await Promise.all([
+                window.fbDb.collection('stock').get(),
+                window.utils.getProducts ? window.utils.getProducts() : [],
+                window.utils.getWarehouses ? window.utils.getWarehouses() : []
+            ]);
+
+            // خرائط بيانات سريعة لربط الأسماء بالأكواد
+            const prodMap = {};
+            products.forEach(p => { prodMap[p.id] = p; });
+
+            const whMap = {};
+            warehouses.forEach(w => { whMap[w.id] = w.name; });
+
+            this.allStock = [];
+            stockSnap.forEach(doc => {
+                const s = doc.data();
+                const prod = prodMap[s.productId] || {};
+                const whName = whMap[s.warehouseId] || 'المستودع الرئيسي';
+
+                this.allStock.push({
+                    id: doc.id,
+                    sku: prod.sku || s.sku || '-',
+                    name: prod.name || s.productName || 'صنف غير مسمى',
+                    warehouseName: whName,
+                    onHand: Number(s.onHand) || 0,
+                    freeToUse: Number(s.freeToUse ?? s.onHand) || 0
+                });
             });
 
-            const snap = await window.fbDb.collection('stock').get();
-            this.stockList = [];
-            snap.forEach(doc => {
-                const s = doc.data();
-                s.id = doc.id;
-                s.whName = this.whMap[s.warehouseId] || 'مستودع غير محدد';
-                s.productSku = this.prMap[s.productId] || '-';
-                s.reorderLvl = prReorderMap[s.productId] || 0;
-                
-                if(s.onHand !== 0 || s.freeToUse !== 0) {
-                    this.stockList.push(s);
+            this.filteredStock = [...this.allStock];
+            this.renderTableRows();
+
+        } catch (err) {
+            console.error("Stock loading error:", err);
+            if (window.utils && window.utils.showToast) {
+                utils.showToast("خطأ أثناء تحميل بيانات المخزون", "error");
+            }
+        } finally {
+            if (window.utils && window.utils.hideLoader) utils.hideLoader();
+        }
+    },
+
+    renderTableRows: function() {
+        const tbody = document.getElementById('stock-tbody');
+        const countLabel = document.getElementById('stock-count-label');
+        if (!tbody) return;
+
+        if (countLabel) {
+            countLabel.textContent = `عرض ${this.filteredStock.length} من أصل ${this.allStock.length} صنف بالمخزن`;
+        }
+
+        if (this.filteredStock.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                        🔍 لم يتم العثور على أي صنف مطابق للبحث أو الباركود
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = this.filteredStock.map(item => {
+            const isLow = item.freeToUse <= 5;
+            const isOut = item.freeToUse <= 0;
+
+            let badgeHtml = `<span class="badge badge-done">متوفر</span>`;
+            if (isOut) {
+                badgeHtml = `<span class="badge badge-canceled">نفد من المخزن</span>`;
+            } else if (isLow) {
+                badgeHtml = `<span class="badge badge-ready">قارب على النفاد</span>`;
+            }
+
+            return `
+                <tr>
+                    <td>
+                        <span style="font-family: monospace; font-weight: 700; background: var(--surface-hover); padding: 0.25rem 0.5rem; border-radius: 4px; border: 1px solid var(--border);">
+                            ${item.sku}
+                        </span>
+                    </td>
+                    <td><strong>${item.name}</strong></td>
+                    <td><span class="badge badge-draft">${item.warehouseName}</span></td>
+                    <td style="font-weight: 700;">${item.onHand} وحدة</td>
+                    <td style="font-weight: 800; color: ${isLow ? 'var(--error)' : 'var(--primary)'};">${item.freeToUse} وحدة</td>
+                    <td>${badgeHtml}</td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    attachSearchEvents: function() {
+        const searchInput = document.getElementById('stock-instant-search');
+        const clearBtn = document.getElementById('btn-clear-stock-search');
+
+        if (searchInput) {
+            // التركيز التلقائي على خانة البحث لتكون جاهزة للمسح المباشر
+            searchInput.focus();
+
+            // الاستماع اللحظي للكتابة أو مسح الباركود
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.trim().toLowerCase();
+
+                if (query.length > 0) {
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                }
+
+                // فلترة فورية بالـ SKU أو اسم الصنف أو اسم المستودع
+                this.filteredStock = this.allStock.filter(item => {
+                    const skuMatch = (item.sku || '').toLowerCase().includes(query);
+                    const nameMatch = (item.name || '').toLowerCase().includes(query);
+                    const whMatch = (item.warehouseName || '').toLowerCase().includes(query);
+                    return skuMatch || nameMatch || whMatch;
+                });
+
+                this.renderTableRows();
+            });
+
+            // مسح البحث عند الضغط على Escape
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    searchInput.value = '';
+                    clearBtn.classList.add('hidden');
+                    this.filteredStock = [...this.allStock];
+                    this.renderTableRows();
                 }
             });
-            this.populateTable(this.stockList);
-        } catch (e) {
-            console.error(e);
-            utils.showToast("خطأ أثناء تحميل بيانات المخزون", "error");
-        } finally {
-            utils.hideLoader();
         }
-    },
 
-    populateTable: function(data) {
-        const tbody = document.getElementById('stock-tbody');
-        tbody.innerHTML = '';
-        
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">لا توجد أرصدة متوفرة في المخزن حالياً.</td></tr>';
-            return;
-        }
-        
-        data.forEach(s => {
-            const tr = document.createElement('tr');
-            
-            let stat = '';
-            if(s.onHand <= 0) stat = '<span class="badge badge-canceled">نفد من المخزن</span>';
-            else if(s.onHand <= s.reorderLvl) stat = '<span class="badge badge-ready">مخزون منخفض</span>';
-            else stat = '<span class="badge badge-done">متوفر بالمخزن</span>';
-
-            tr.innerHTML = `
-                <td class="font-weight-600">${s.productName || '-'}</td>
-                <td><strong>${s.productSku}</strong></td>
-                <td>${s.whName}</td>
-                <td>${s.locationId || '-'}</td>
-                <td class="font-weight-600">${s.onHand}</td>
-                <td>${s.freeToUse}</td>
-                <td>${stat}</td>
-                <td>
-                    <button class="btn btn-secondary btn-edit-stock" data-id="${s.id}" style="padding: 0.3rem 0.75rem; font-size: 0.8rem;">
-                        ✏️ تعديل
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-        // Attach edit listeners after rendering
-        tbody.querySelectorAll('.btn-edit-stock').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const id = e.currentTarget.dataset.id;
-                const stockItem = this.stockList.find(s => s.id === id);
-                if (stockItem) this.openModal(stockItem);
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                clearBtn.classList.add('hidden');
+                searchInput.focus();
+                this.filteredStock = [...this.allStock];
+                this.renderTableRows();
             });
-        });
-    },
-
-    currentEditId: null,
-
-    openModal: function(stockItem) {
-        this.currentEditId = stockItem.id;
-        document.getElementById('stock-edit-product-name').value = stockItem.productName || '';
-        document.getElementById('stock-edit-wh-name').value = stockItem.whName || '';
-        document.getElementById('stock-edit-onhand').value = stockItem.onHand || 0;
-        document.getElementById('stock-edit-free').value = stockItem.freeToUse || 0;
-        document.getElementById('stock-edit-title').textContent = `تعديل رصيد: ${stockItem.productName}`;
-        document.getElementById('stock-edit-modal').classList.remove('hidden');
-    },
-
-    closeModal: function() {
-        this.currentEditId = null;
-        document.getElementById('stock-edit-modal').classList.add('hidden');
-    },
-
-    saveEdit: async function() {
-        if (!this.currentEditId || !window.fbDb) return;
-
-        const onHand = parseInt(document.getElementById('stock-edit-onhand').value, 10);
-        const freeToUse = parseInt(document.getElementById('stock-edit-free').value, 10);
-
-        if (isNaN(onHand) || isNaN(freeToUse) || onHand < 0 || freeToUse < 0) {
-            utils.showToast("يرجى إدخال كميات صحيحة غير سالبة.", "error");
-            return;
-        }
-
-        utils.showLoader();
-        try {
-            await window.fbDb.collection('stock').doc(this.currentEditId).update({ onHand, freeToUse });
-            utils.showToast("تم تحديث رصيد المخزون بنجاح!", "success");
-            this.closeModal();
-            this.fetchData();
-        } catch(e) {
-            console.error(e);
-            utils.showToast("فشل تحديث رصيد المخزون.", "error");
-        } finally {
-            utils.hideLoader();
         }
     }
 };
