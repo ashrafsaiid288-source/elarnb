@@ -97,7 +97,8 @@ window.suppliersController = {
         }
 
         tbody.innerHTML = this.filteredList.map(s => {
-            const whatsappLink = s.phone ? `https://wa.me/2${s.phone.replace(/[^0-9]/g, '')}` : '#';
+            const cleanPhone = (s.phone || '').replace(/[^0-9]/g, '');
+            const whatsappLink = cleanPhone ? `https://wa.me/2${cleanPhone}` : '#';
 
             return `
                 <tr>
@@ -125,7 +126,7 @@ window.suppliersController = {
         }).join('');
     },
 
-    // ================== نافذة إضافة أو تعديل مورد ==================
+    // نافذة إضافة وتعديل مورد
     openSupplierModal: function(supplierId = null) {
         const modalContainer = document.getElementById('supplier-modal-container');
         if (!modalContainer) return;
@@ -212,11 +213,9 @@ window.suppliersController = {
             };
 
             if (supplierId) {
-                // تعديل مورد حالي
                 await window.fbDb.collection('suppliers').doc(supplierId).update(data);
                 if (window.utils && utils.showToast) utils.showToast("تم تحديث بيانات المورد بنجاح", "success");
             } else {
-                // إضافة مورد جديد
                 data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
                 await window.fbDb.collection('suppliers').add(data);
                 if (window.utils && utils.showToast) utils.showToast(`تم تكويد المورد (${name}) بنجاح`, "success");
