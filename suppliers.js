@@ -1,5 +1,5 @@
 /**
- * Suppliers Controller (شاشة تكويد وإدارة الموردين)
+ * Suppliers Controller (شاشة تكويد وإدارة الموردين - تشغيل تلقائي ذكي)
  */
 
 window.suppliersController = {
@@ -14,6 +14,7 @@ window.suppliersController = {
     },
 
     renderLayout: function() {
+        if (!this.container) return;
         this.container.innerHTML = `
             <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
                 <div class="view-header-left" style="display:flex; align-items:center; gap:12px;">
@@ -126,7 +127,6 @@ window.suppliersController = {
         }).join('');
     },
 
-    // نافذة إضافة وتعديل مورد
     openSupplierModal: function(supplierId = null) {
         const modalContainer = document.getElementById('supplier-modal-container');
         if (!modalContainer) return;
@@ -270,3 +270,24 @@ window.suppliersController = {
         });
     }
 };
+
+// =========================================================================
+// السحر هنا: استماع وتشغيل تلقائي فور الضغط على زرار الموردين في القائمة
+// =========================================================================
+document.addEventListener('click', function(e) {
+    const navBtn = e.target.closest('[data-route="suppliers"]');
+    if (navBtn) {
+        const container = document.getElementById('view-suppliers');
+        if (container) {
+            window.suppliersController.init(container);
+        }
+    }
+});
+
+// فحص أولي في حالة تم فتح الصفحة مباشرة
+setTimeout(() => {
+    const container = document.getElementById('view-suppliers');
+    if (container && container.classList.contains('active')) {
+        window.suppliersController.init(container);
+    }
+}, 200);
