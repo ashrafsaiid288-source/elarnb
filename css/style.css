@@ -1,5 +1,5 @@
 /* ==========================================================================
-   CoreInventory - Modern Executive Slate Theme (RTL & Arabic Ready)
+   CoreInventory - Clean Ultra-Modern Light Theme (RTL & Arabic Ready)
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -8,13 +8,13 @@
   /* Typography */
   --font-family: 'Cairo', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-  /* Brand Palette */
+  /* Brand Palette (Executive Indigo) */
   --primary: #4f46e5;
   --primary-hover: #4338ca;
   --primary-light: #eef2ff;
-  --primary-glow: rgba(79, 70, 229, 0.18);
+  --primary-glow: rgba(79, 70, 229, 0.12);
 
-  /* Light Theme Canvas */
+  /* Clean Light Canvas */
   --background: #f8fafc;
   --surface: #ffffff;
   --surface-hover: #f1f5f9;
@@ -24,7 +24,7 @@
   --border-focus: #818cf8;
 
   /* Status Colors */
-  --status-draft: #94a3b8;
+  --status-draft: #64748b;
   --status-draft-bg: #f1f5f9;
   --status-waiting: #2563eb;
   --status-waiting-bg: #eff6ff;
@@ -51,39 +51,10 @@
   --border-radius: 12px;
 
   /* Soft Ambient Shadows */
-  --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
-  --shadow-lg: 0 10px 20px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
-  --shadow-modal: 0 20px 30px -5px rgba(15, 23, 42, 0.2), 0 10px 10px -5px rgba(15, 23, 42, 0.08);
-}
-
-/* ==========================================================================
-   Modern Slate Dark Mode (رمادي فحمي ناعم ومريح بدون سواد كاحل)
-   ========================================================================== */
-body.dark-mode {
-  --background: #151c2c;
-  --surface: #1e273d;
-  --surface-hover: #27334d;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --border: #2a3753;
-  --border-focus: #6366f1;
-
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-light: rgba(99, 102, 241, 0.15);
-  --primary-glow: rgba(99, 102, 241, 0.3);
-
-  --status-draft-bg: rgba(148, 163, 184, 0.12);
-  --status-waiting-bg: rgba(37, 99, 235, 0.15);
-  --status-ready-bg: rgba(217, 119, 6, 0.15);
-  --status-done-bg: rgba(5, 150, 105, 0.15);
-  --status-canceled-bg: rgba(220, 38, 38, 0.15);
-
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 4px 10px -1px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 12px 25px -4px rgba(0, 0, 0, 0.45);
-  --shadow-modal: 0 25px 40px -5px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 12px 24px -4px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.02);
+  --shadow-modal: 0 24px 48px -12px rgba(15, 23, 42, 0.18);
 }
 
 /* ==========================================================================
@@ -108,19 +79,18 @@ body {
   color: var(--text-main);
   line-height: 1.6;
   min-height: 100vh;
-  transition: background-color 0.25s ease, color 0.25s ease;
   -webkit-font-smoothing: antialiased;
 }
 
 a {
   color: var(--primary);
   text-decoration: none;
-  transition: color 0.15s ease;
+  transition: opacity 0.15s ease;
 }
 
 a:hover {
   text-decoration: none;
-  opacity: 0.88;
+  opacity: 0.85;
 }
 
 .hidden {
@@ -188,7 +158,7 @@ h1, h2, h3, h4, h5, h6 {
 .btn-primary:hover {
   background-color: var(--primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px var(--primary-glow);
+  box-shadow: 0 8px 18px var(--primary-glow);
 }
 
 .btn-secondary {
@@ -200,19 +170,19 @@ h1, h2, h3, h4, h5, h6 {
 .btn-secondary:hover {
   background-color: var(--surface-hover);
   transform: translateY(-2px);
-  border-color: var(--text-muted);
+  border-color: #cbd5e1;
 }
 
 .btn-danger {
   background-color: var(--surface);
   color: var(--error);
-  border-color: rgba(220, 38, 38, 0.3);
+  border-color: rgba(220, 38, 38, 0.2);
 }
 .btn-danger:hover {
   background-color: var(--error);
   color: #ffffff;
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.25);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.2);
 }
 
 .btn-success {
@@ -229,12 +199,12 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-main);
   border: 1px solid var(--border);
   gap: 0.75rem;
+  box-shadow: var(--shadow-sm);
 }
 .btn-google:hover {
   background-color: var(--surface-hover);
   transform: translateY(-2px);
-  border-color: #4285F4;
-  box-shadow: 0 4px 15px rgba(66, 133, 244, 0.15);
+  border-color: #cbd5e1;
 }
 
 .btn-separator {
@@ -254,7 +224,6 @@ h1, h2, h3, h4, h5, h6 {
 .btn-separator span {
   padding: 0 1rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .btn-block { width: 100%; }
@@ -319,7 +288,7 @@ textarea {
   background-color: var(--surface);
   color: var(--text-main);
   transition: all 0.2s ease;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 input:focus, select:focus, textarea:focus {
@@ -378,7 +347,7 @@ input:disabled, select:disabled, textarea:disabled {
   align-items: center;
   justify-content: center;
   padding: var(--spacing-xl);
-  background: radial-gradient(circle at top right, var(--primary-light), transparent 50%), var(--background);
+  background: radial-gradient(circle at top, rgba(79, 70, 229, 0.04), transparent 60%), var(--background);
 }
 
 .auth-header {
@@ -402,7 +371,7 @@ input:disabled, select:disabled, textarea:disabled {
 .auth-container {
   display: flex;
   justify-content: center;
-  max-width: 460px;
+  max-width: 450px;
   width: 100%;
   margin: 0 auto;
 }
@@ -432,13 +401,13 @@ input:disabled, select:disabled, textarea:disabled {
   left: 0;
   right: 0;
   height: var(--nav-height);
-  background-color: var(--surface);
+  background-color: rgba(255, 255, 255, 0.95);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   padding: 0 var(--spacing-xl);
   z-index: 1000;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(10px);
   box-shadow: var(--shadow-sm);
 }
 
@@ -483,7 +452,6 @@ input:disabled, select:disabled, textarea:disabled {
 .nav-item:hover {
   color: var(--primary);
   background-color: var(--primary-light);
-  text-decoration: none;
 }
 
 .nav-item.active {
@@ -563,7 +531,7 @@ input:disabled, select:disabled, textarea:disabled {
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -589,7 +557,7 @@ input:disabled, select:disabled, textarea:disabled {
 }
 .view.active {
   display: block;
-  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes fadeIn {
@@ -720,14 +688,14 @@ td.editable input:focus {
 /* Highlight Rows */
 tr.row-in td {
   color: var(--status-done);
-  background-color: rgba(5, 150, 105, 0.05);
+  background-color: rgba(5, 150, 105, 0.04);
 }
 tr.row-out td {
   color: var(--status-canceled);
-  background-color: rgba(220, 38, 38, 0.05);
+  background-color: rgba(220, 38, 38, 0.04);
 }
 tr.row-error td {
-  background-color: rgba(220, 38, 38, 0.1);
+  background-color: rgba(220, 38, 38, 0.08);
 }
 
 /* ==========================================================================
@@ -791,7 +759,7 @@ tr.row-error td {
 .summary-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-md);
-  border-color: var(--primary);
+  border-color: #cbd5e1;
 }
 
 .summary-card h3 {
@@ -929,8 +897,8 @@ tr.row-error td {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(5px);
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1065,7 +1033,7 @@ tr.row-error td {
 #global-loader {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
