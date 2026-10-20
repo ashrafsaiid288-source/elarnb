@@ -1,5 +1,5 @@
 /**
- * Receipts Controller (Incoming Operations - Arabic Version with A4 Slip Printing)
+ * Receipts Controller (Incoming Operations - 1-Step Direct Incoming "الوارد" with A4 Slip Printing)
  */
 
 window.receiptsController = {
@@ -13,25 +13,25 @@ window.receiptsController = {
 
     translateStatus: function(status) {
         switch (status) {
-            case 'Draft': return 'مسودة';
-            case 'Waiting': return 'قيد الانتظار';
-            case 'Ready': return 'جاهز للاستلام';
             case 'Done': return 'مكتمل';
             case 'Canceled': return 'ملغي';
-            default: return status || '-';
+            default: return 'مكتمل';
         }
     },
 
     renderList: function() {
         this.container.innerHTML = `
-            <div class="view-header">
-                <div class="view-header-left">
-                    <button class="btn btn-primary" id="btn-new-receipt">إذن استلام جديد</button>
-                    <h2 class="view-title">أذون الاستلام (الوارد)</h2>
+            <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+                <div class="view-header-left" style="display:flex; align-items:center; gap:12px;">
+                    <button class="btn btn-primary" id="btn-new-receipt" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; padding:0.6rem 1.2rem; border-radius:8px; background:var(--primary); color:#fff; border:none; cursor:pointer;">
+                        <span>⚡</span>
+                        <span>+ وارد جديد (Incoming)</span>
+                    </button>
+                    <h2 class="view-title" style="margin:0; font-size:1.5rem; font-weight:800;">عمليات الوارد (Incoming)</h2>
                 </div>
                 <div class="view-header-right">
-                    <div class="search-container">
-                        <input type="text" id="receipt-search" placeholder="بحث برقم الإذن أو المورد...">
+                    <div class="search-container" style="display:flex; align-items:center; background:var(--surface-hover); border:1px solid var(--border); border-radius:8px; padding:0.4rem 0.8rem;">
+                        <input type="text" id="receipt-search" placeholder="بحث برقم المرجع أو المورد..." style="border:none; background:transparent; outline:none; width:220px; font-size:0.9rem;">
                     </div>
                 </div>
             </div>
@@ -40,14 +40,14 @@ window.receiptsController = {
                 <table>
                     <thead>
                         <tr>
-                            <th>رقم المرجع / الإذن</th>
+                            <th>رقم المرجع</th>
                             <th>المورد / جهة التوريد</th>
-                            <th>تاريخ الاستلام المقرر</th>
-                            <th>الحالة</th>
+                            <th>تاريخ الاستلام</th>
+                            <th>حالة العملية</th>
                         </tr>
                     </thead>
                     <tbody id="receipts-tbody">
-                        <tr><td colspan="4" class="text-center text-muted">جاري تحميل أذون الاستلام...</td></tr>
+                        <tr><td colspan="4" class="text-center text-muted" style="padding:2rem;">جاري تحميل سجلات الوارد...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -68,7 +68,7 @@ window.receiptsController = {
 
     fetchData: async function() {
         if (!window.fbDb) return;
-        utils.showLoader();
+        if (window.utils && utils.showLoader) utils.showLoader();
         try {
             const snap = await window.fbDb.collection('receipts').orderBy('createdAt', 'desc').get();
             this.receiptsList = [];
@@ -80,37 +80,44 @@ window.receiptsController = {
             this.populateTable(this.receiptsList);
         } catch (e) {
             console.error(e);
-            utils.showToast("خطأ أثناء تحميل بيانات أذون الاستلام", "error");
+            if (window.utils && utils.showToast) utils.showToast("خطأ أثناء تحميل بيانات الوارد", "error");
         } finally {
-            utils.hideLoader();
+            if (window.utils && utils.hideLoader) utils.hideLoader();
         }
     },
 
     populateTable: function(data) {
         const tbody = document.getElementById('receipts-tbody');
+        if (!tbody) return;
         tbody.innerHTML = '';
         
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">لا توجد أذون استلام مسجلة.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted" style="padding:2rem;">لا توجد عمليات وارد مسجلة حتى الآن.</td></tr>';
             return;
         } 
         
         data.forEach(r => {
             const tr = document.createElement('tr');
             tr.className = 'clickable';
+            tr.style.cursor = 'pointer';
             tr.onclick = () => this.openForm(r);
+            
+            const isDone = (r.status === 'Done' || !r.status);
+            const badgeClass = isDone ? 'badge-done' : 'badge-canceled';
+            const dateDisplay = (window.utils && utils.formatDate) ? utils.formatDate(r.scheduleDate) : (r.scheduleDate || '-');
+
             tr.innerHTML = `
-                <td class="font-weight-600">${r.reference || 'مسودة'}</td>
-                <td>${r.supplier || '-'}</td>
-                <td>${utils.formatDate(r.scheduleDate)}</td>
-                <td><span class="badge badge-${(r.status || '').toLowerCase()}">${this.translateStatus(r.status)}</span></td>
+                <td class="font-weight-600"><span style="font-family:monospace; font-weight:700; background:var(--surface-hover); padding:3px 8px; border-radius:4px;">${r.reference || '-'}</span></td>
+                <td><strong>${r.supplier || 'مورد عام'}</strong></td>
+                <td>${dateDisplay}</td>
+                <td><span class="badge ${badgeClass}">${this.translateStatus(r.status)}</span></td>
             `;
             tbody.appendChild(tr);
         });
     },
 
     printSlip: function(receipt) {
-        if (!receipt) return utils.showToast("لا توجد بيانات للطباعة", "error");
+        if (!receipt) return (window.utils && utils.showToast) ? utils.showToast("لا توجد بيانات للطباعة", "error") : null;
 
         const lines = receipt.lines || [];
         const totalQty = lines.reduce((sum, line) => sum + (Number(line.quantity) || 0), 0);
@@ -123,7 +130,7 @@ window.receiptsController = {
                     <td style="text-align: center; font-weight: bold; width: 40px;">${index + 1}</td>
                     <td><strong>${label}</strong></td>
                     <td style="text-align: center; font-weight: 800; font-size: 14px; width: 130px;">${qty} وحدة</td>
-                    <td style="text-align: center; width: 120px;">مطابق للمواصفات</td>
+                    <td style="text-align: center; width: 120px; color:#059669; font-weight:700;">تم الاستلام والتوريد</td>
                 </tr>
             `;
         }).join('');
@@ -133,14 +140,14 @@ window.receiptsController = {
         <html lang="ar" dir="rtl">
         <head>
             <meta charset="UTF-8">
-            <title>طباعة ${receipt.reference || 'إذن استلام'}</title>
+            <title>طباعة ${receipt.reference || 'إذن الوارد'}</title>
             <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
             <style>
                 @page { size: A4 portrait; margin: 12mm 15mm; }
                 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
                 body { background: #fff; color: #0f172a; padding: 24px; font-size: 13px; line-height: 1.6; }
                 .slip-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 16px; margin-bottom: 20px; }
-                .brand-name { font-size: 24px; font-weight: 900; color: #4338ca; }
+                .brand-name { font-size: 24px; font-weight: 900; color: #0f172a; }
                 .brand-sub { font-size: 12px; color: #64748b; font-weight: 600; }
                 .doc-title { font-size: 18px; font-weight: 800; color: #0f172a; text-align: left; }
                 .doc-ref-badge { display: inline-block; background: #f1f5f9; border: 1.5px solid #cbd5e1; padding: 4px 12px; border-radius: 6px; font-family: monospace; font-size: 15px; font-weight: 900; color: #059669; margin-top: 6px; }
@@ -165,12 +172,12 @@ window.receiptsController = {
         <body>
             <div class="slip-header">
                 <div>
-                    <div class="brand-name">CoreInventory 📦</div>
-                    <div class="brand-sub">إدارة المخازن والمستودعات والخدمات اللوجستية</div>
+                    <div class="brand-name">إدارة المخازن 📦</div>
+                    <div class="brand-sub">إذن استلام وتوريد بضاعة للمستودع</div>
                 </div>
                 <div style="text-align: left;">
-                    <div class="doc-title">إذن فحص واستلام بضاعة (وارد)</div>
-                    <div class="doc-ref-badge">${receipt.reference || 'مسودة جديدة'}</div>
+                    <div class="doc-title">إذن توريد واستلام بضاعة (الوارد)</div>
+                    <div class="doc-ref-badge">${receipt.reference || 'وارد فوري'}</div>
                 </div>
             </div>
 
@@ -191,8 +198,8 @@ window.receiptsController = {
                         <span class="info-value">${receipt.scheduleDate || new Date().toISOString().split('T')[0]}</span>
                     </div>
                     <div class="info-line">
-                        <span class="info-label">حالة الإذن:</span>
-                        <span class="info-value" style="color: #059669;">${this.translateStatus(receipt.status)}</span>
+                        <span class="info-label">حالة العملية:</span>
+                        <span class="info-value" style="color: #059669; font-weight:800;">مكتمل (تم التوريد للمخزن)</span>
                     </div>
                 </div>
             </div>
@@ -201,9 +208,9 @@ window.receiptsController = {
                 <thead>
                     <tr>
                         <th style="width: 40px; text-align: center;">#</th>
-                        <th>اسم الصنف ومواصفاته (الباركود / SKU)</th>
-                        <th style="width: 130px; text-align: center;">الكمية المستلمة</th>
-                        <th style="width: 120px; text-align: center;">حالة الفحص</th>
+                        <th>اسم الصنف ومواصفاته</th>
+                        <th style="width: 130px; text-align: center;">الكمية الواردة</th>
+                        <th style="width: 120px; text-align: center;">الحالة</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -222,14 +229,14 @@ window.receiptsController = {
 
             <div class="signatures-grid">
                 <div class="sig-box">
-                    <div class="sig-title">أمين المستودع</div>
+                    <div class="sig-title">أمين المستودع المستلم</div>
                     <div class="sig-line"></div>
                     <div class="sig-sub">التوقيع والاسم</div>
                 </div>
                 <div class="sig-box">
-                    <div class="sig-title">لجنة الفحص والاستلام</div>
+                    <div class="sig-title">إدارة المخزون والمراجعة</div>
                     <div class="sig-line"></div>
-                    <div class="sig-sub">التوقيع والاعتماد</div>
+                    <div class="sig-sub">الاعتماد والتسجيل</div>
                 </div>
                 <div class="sig-box">
                     <div class="sig-title">مندوب التوريد / السائق</div>
@@ -239,7 +246,7 @@ window.receiptsController = {
             </div>
 
             <div class="footer-note">
-                تم استخراج إذن الاستلام آلياً عبر نظام CoreInventory - يُرجى حفظ نسخة بالمخزن للتسوية المحاسبية.
+                تم استخراج إذن الوارد وتحديث رصيد المخزن آلياً.
             </div>
         </body>
         </html>
@@ -247,7 +254,7 @@ window.receiptsController = {
 
         const printWindow = window.open('', '_blank', 'width=900,height=950');
         if (!printWindow) {
-            return utils.showToast("يرجى السماح بالنوافذ المنبثقة (Popups) للطباعة", "warning");
+            return (window.utils && utils.showToast) ? utils.showToast("يرجى السماح بالنوافذ المنبثقة (Popups) للطباعة", "warning") : null;
         }
 
         printWindow.document.open();
@@ -256,80 +263,77 @@ window.receiptsController = {
 
         printWindow.onload = function() {
             printWindow.focus();
-            setTimeout(() => {
-                printWindow.print();
-            }, 250);
+            setTimeout(() => { printWindow.print(); }, 250);
         };
     },
 
     openForm: async function(receipt = null) {
-        const isEdit = !!receipt;
-        const status = isEdit ? receipt.status : 'Draft';
-        const isReadOnly = (status === 'Done' || status === 'Canceled');
+        const isEdit = !!receipt; // لو موجود، يبقى استعراض لعملية تمت بالفعل
 
         this.container.innerHTML = `
             <div class="view-header" style="margin-bottom:var(--spacing-sm); border:none; padding-bottom:0;">
-                <div class="view-header-left">
-                    <button class="btn btn-secondary" id="btn-back">← رجوع</button>
-                    ${status === 'Draft' ? `<button class="btn btn-primary" id="btn-mark-ready">تحديد كـ جاهز</button>` : ''}
-                    <h2 class="view-title" style="margin-right:var(--spacing-md)">إذن استلام وتوريد بضاعة</h2>
+                <div class="view-header-left" style="display:flex; align-items:center; gap:10px;">
+                    <button class="btn btn-secondary" id="btn-back">← رجوع لقائمة الوارد</button>
+                    <h2 class="view-title">${isEdit ? 'تفاصيل إذن الوارد' : 'استلام وارد جديد (Incoming)'}</h2>
                 </div>
             </div>
             
-            <div class="doc-header" style="background:var(--surface); padding:var(--spacing-md); border:1px solid var(--border); border-bottom:none; border-radius:var(--border-radius) var(--border-radius) 0 0; margin-bottom:0; display:flex; align-items:center;">
-                <div style="flex:1; display:flex; gap:8px; align-items:center;">
-                    ${status === 'Ready' && !isReadOnly ? `<button class="btn btn-success" id="btn-validate" style="background:var(--status-done); color:white; border:none; padding:0.5rem 1rem; border-radius:4px;">اعتماد وتوريد للمخزن</button>` : ''}
-                    <button class="btn btn-secondary" id="btn-print" title="طباعة إذن الاستلام">
-                        🖨️ طباعة إذن الاستلام
-                    </button>
-                    ${!isReadOnly ? `<button class="btn btn-secondary" id="btn-cancel">إلغاء الإذن</button>` : ''}
+            <div class="doc-header" style="background:var(--surface); padding:var(--spacing-md); border:1px solid var(--border); border-bottom:none; border-radius:var(--border-radius) var(--border-radius) 0 0; margin-bottom:0; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; gap:8px; align-items:center;">
+                    ${!isEdit ? `
+                        <button class="btn btn-success" id="btn-direct-receive" style="background:#16a34a; color:white; font-weight:700; border:none; padding:0.6rem 1.4rem; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                            <span>⚡ إتمام وتأكيد الوارد فوراً</span>
+                        </button>
+                    ` : `
+                        <button class="btn btn-secondary" id="btn-print" title="طباعة إذن الاستلام">
+                            🖨️ طباعة إذن الوارد
+                        </button>
+                        <button class="btn btn-danger" id="btn-cancel" style="background:#dc2626; color:#fff; border:none; border-radius:6px; padding:0.5rem 1rem; cursor:pointer;">إلغاء العملية</button>
+                    `}
                 </div>
                 
-                <div class="status-pipeline">
-                    <span class="step ${status === 'Draft' ? 'active' : ''}">مسودة</span> ←
-                    <span class="step ${status === 'Waiting' ? 'active' : ''}">انتظار</span> ←
-                    <span class="step ${status === 'Ready' ? 'active' : ''}">جاهز</span> ←
-                    <span class="step ${status === 'Done' ? 'active' : ''}">مكتمل</span>
+                <!-- عرض حالة العملية فورية وبسيطة بدون مسودة وانتظار وجاهز -->
+                <div>
+                    <span class="badge" style="background:${isEdit ? '#dcfce7' : '#e0f2fe'}; color:${isEdit ? '#16a34a' : '#0284c7'}; padding:6px 14px; border-radius:50rem; font-weight:700; font-size:0.85rem;">
+                        ${isEdit ? '✓ عملية وارد مكتملة (Done)' : '⚡ وارد مباشر فوري'}
+                    </span>
                 </div>
             </div>
 
-            <div class="form-document" style="border-top-left-radius:0; border-top-right-radius:0;">
-                <div class="doc-ref text-muted" style="margin-bottom:var(--spacing-md)">${isEdit ? receipt.reference : 'جديد'}</div>
+            <div class="form-document" style="border-top-left-radius:0; border-top-right-radius:0; padding:1.5rem; background:var(--surface); border:1px solid var(--border); border-radius:0 0 var(--border-radius) var(--border-radius);">
+                <div class="doc-ref text-muted" style="margin-bottom:var(--spacing-md); font-family:monospace; font-weight:700;">
+                    رقم المرجع: <span style="color:var(--primary);">${isEdit ? receipt.reference : 'سيتم التوليد تلقائياً (IN-XXXX)'}</span>
+                </div>
                 
-                <div class="form-grid">
+                <div class="form-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; margin-bottom:1.5rem;">
                     <div class="form-group">
-                        <label>المورد / جهة التوريد</label>
-                        <input type="text" id="r-supplier" value="${isEdit ? (receipt.supplier || '') : ''}" placeholder="اسم المورد أو الشركة" ${isReadOnly ? 'disabled' : ''}>
+                        <label style="display:block; font-weight:700; margin-bottom:0.4rem;">المورد / جهة التوريد: <span style="color:red;">*</span></label>
+                        <input type="text" id="r-supplier" value="${isEdit ? (receipt.supplier || '') : ''}" placeholder="مثال: ورشة الصياغة / شركة التوريد" ${isEdit ? 'disabled' : ''} style="width:100%; padding:0.65rem; border-radius:6px; border:1px solid var(--border);">
                     </div>
                     <div class="form-group">
-                        <label>تاريخ الاستلام المقرر</label>
-                        <input type="date" id="r-date" value="${isEdit ? (receipt.scheduleDate || '') : new Date().toISOString().split('T')[0]}" ${isReadOnly ? 'disabled' : ''}>
+                        <label style="display:block; font-weight:700; margin-bottom:0.4rem;">تاريخ الاستلام:</label>
+                        <input type="date" id="r-date" value="${isEdit ? (receipt.scheduleDate || '') : new Date().toISOString().split('T')[0]}" ${isEdit ? 'disabled' : ''} style="width:100%; padding:0.65rem; border-radius:6px; border:1px solid var(--border);">
                     </div>
                 </div>
 
                 <div class="table-container lines-table">
-                    <table>
+                    <table style="width:100%; border-collapse:collapse;">
                         <thead>
-                            <tr>
-                                <th>المنتج / الصنف</th>
-                                <th>الكمية المستلمة</th>
-                                ${!isReadOnly ? '<th>إجراء</th>' : ''}
+                            <tr style="background:var(--surface-hover); text-align:right;">
+                                <th style="padding:10px;">المنتج / الصنف</th>
+                                <th style="padding:10px; width:180px;">الكمية المستلمة</th>
+                                ${!isEdit ? '<th style="padding:10px; width:80px; text-align:center;">إجراء</th>' : ''}
                             </tr>
                         </thead>
                         <tbody id="r-lines-tbody"></tbody>
-                        ${!isReadOnly ? `
+                        ${!isEdit ? `
                         <tfoot>
                             <tr>
-                                <td colspan="3"><a href="#" id="add-r-line"> + إضافة صنف آخر للإذن</a></td>
+                                <td colspan="3" style="padding:10px;"><a href="#" id="add-r-line" style="color:var(--primary); font-weight:700; text-decoration:none;"> + إضافة صنف آخر للإذن</a></td>
                             </tr>
                         </tfoot>` : ''}
                     </table>
                 </div>
-                
-                ${!isReadOnly ? `
-                <div style="margin-top:var(--spacing-xl)">
-                    <button class="btn btn-primary" id="btn-save-draft">حفظ التغييرات</button>
-                </div>` : ''}
             </div>
         `;
 
@@ -341,8 +345,8 @@ window.receiptsController = {
 
         const renderLine = (lineData, index) => {
             const tr = document.createElement('tr');
-            if(isReadOnly) {
-                tr.innerHTML = `<td>${lineData.productLabel}</td><td>${lineData.quantity}</td>`;
+            if(isEdit) {
+                tr.innerHTML = `<td style="padding:10px;"><strong>${lineData.productLabel}</strong></td><td style="padding:10px; font-weight:700;">${lineData.quantity} وحدة</td>`;
             } else {
                 let opts = `<option value="">اختر المنتج...</option>`;
                 productOptions.forEach(p => {
@@ -351,14 +355,14 @@ window.receiptsController = {
                 });
                 const selectId = `rline-prod-${index}`;
                 tr.innerHTML = `
-                    <td class="editable" style="padding:0">
-                        <select id="${selectId}" style="border:none; height:100%; width:100%; padding:0.75rem" required>${opts}</select>
+                    <td class="editable" style="padding:4px">
+                        <select id="${selectId}" style="border:1px solid var(--border); border-radius:6px; height:100%; width:100%; padding:0.65rem" required>${opts}</select>
                     </td>
-                    <td class="editable" style="padding:0">
-                        <input type="number" class="rline-qty" value="${lineData.quantity || 1}" min="1" required style="border:none; height:100%; padding:0.75rem;">
+                    <td class="editable" style="padding:4px">
+                        <input type="number" class="rline-qty" value="${lineData.quantity || 1}" min="1" required style="border:1px solid var(--border); border-radius:6px; height:100%; width:100%; padding:0.65rem; font-weight:700;">
                     </td>
-                    <td style="text-align:center; padding:0 1rem;">
-                        <button type="button" class="icon-btn text-error btn-remove-line" style="cursor:pointer;" title="حذف">&times;</button>
+                    <td style="text-align:center; padding:4px;">
+                        <button type="button" class="icon-btn text-error btn-remove-line" style="cursor:pointer; border:none; background:none; font-size:1.2rem; color:#dc2626;" title="حذف">&times;</button>
                     </td>
                 `;
                 setTimeout(() => {
@@ -375,9 +379,15 @@ window.receiptsController = {
         const tbody = document.getElementById('r-lines-tbody');
         const lines = isEdit ? (receipt.lines || []) : [];
         let lineCounter = 0;
-        lines.forEach(l => tbody.appendChild(renderLine(l, lineCounter++)));
 
-        // Event Listeners
+        if (lines.length > 0) {
+            lines.forEach(l => tbody.appendChild(renderLine(l, lineCounter++)));
+        } else if (!isEdit) {
+            // سطر أولي جاهز للإدخال
+            tbody.appendChild(renderLine({}, lineCounter++));
+        }
+
+        // رجوع للقائمة
         document.getElementById('btn-back').addEventListener('click', () => this.init(this.container));
         
         const gatherData = () => {
@@ -390,7 +400,7 @@ window.receiptsController = {
                     newLines.push({
                         productId: sel.value,
                         productLabel: tr.dataset.label || sel.options[sel.selectedIndex].text,
-                        quantity: parseInt(qtyInp.value) || 0
+                        quantity: parseInt(qtyInp.value, 10) || 0
                     });
                 }
             });
@@ -401,27 +411,16 @@ window.receiptsController = {
             };
         };
 
+        // زر الطباعة
         const printBtn = document.getElementById('btn-print');
         if (printBtn) {
             printBtn.addEventListener('click', () => {
-                const activeLines = !isReadOnly ? gatherData().lines : (receipt?.lines || []);
-                const slipData = {
-                    ...(receipt || {}),
-                    reference: isEdit ? receipt.reference : 'مسودة جديدة',
-                    supplier: document.getElementById('r-supplier')?.value.trim() || receipt?.supplier || 'مورد عام',
-                    scheduleDate: document.getElementById('r-date')?.value || receipt?.scheduleDate || new Date().toISOString().split('T')[0],
-                    status: status,
-                    lines: activeLines.length > 0 ? activeLines : (receipt?.lines || [])
-                };
-
-                if (slipData.lines.length === 0) {
-                    return utils.showToast("يرجى إضافة أصناف للإذن قبل الطباعة", "warning");
-                }
-                this.printSlip(slipData);
+                this.printSlip(receipt);
             });
         }
 
-        if(!isReadOnly) {
+        // إضافة سطر جديد وحذف سطر
+        if(!isEdit) {
             document.getElementById('add-r-line').addEventListener('click', (e) => {
                 e.preventDefault();
                 tbody.appendChild(renderLine({}, lineCounter++));
@@ -431,74 +430,57 @@ window.receiptsController = {
                 if(e.target.classList.contains('btn-remove-line')) e.target.closest('tr').remove();
             });
 
-            const saveReceipt = async (newStatus) => {
-                utils.showLoader();
-                try {
-                    const db = window.fbDb;
+            // ================== الزرار السحري: إتمام الوارد في خطوة واحدة ==================
+            const directReceiveBtn = document.getElementById('btn-direct-receive');
+            if (directReceiveBtn) {
+                directReceiveBtn.addEventListener('click', async () => {
                     const data = gatherData();
-                    data.status = newStatus;
-                    
-                    if(!isEdit) {
-                        const t = await db.runTransaction(async (tr) => {
+                    if(!data.supplier) {
+                        return utils.showToast("يرجى كتابة اسم المورد أو جهة التوريد", "error");
+                    }
+                    if(data.lines.length === 0) {
+                        return utils.showToast("يرجى اختيار صنف واحد على الأقل وتحديد الكمية", "error");
+                    }
+
+                    if(window.utils && utils.showLoader) utils.showLoader();
+                    directReceiveBtn.disabled = true;
+                    directReceiveBtn.textContent = "جاري التوريد وتحديث المخزن...";
+
+                    const db = window.fbDb;
+                    try {
+                        // المستودع الافتراضي
+                        const whSnap = await db.collection('warehouses').limit(1).get();
+                        const whId = !whSnap.empty ? whSnap.docs[0].id : 'default_warehouse';
+                        const whName = !whSnap.empty ? (whSnap.docs[0].data().name || 'المستودع الرئيسي') : 'المستودع الرئيسي';
+
+                        // 1. توليد رقم المرجع آلياً وتحديث العداد
+                        let reference = 'IN-001';
+                        await db.runTransaction(async (tr) => {
                             const cRef = db.collection('counters').doc('receipts');
                             const cDoc = await tr.get(cRef);
                             let nCount = 1;
                             if(cDoc.exists) nCount = (cDoc.data().count || 0) + 1;
                             tr.set(cRef, { count: nCount }, { merge: true });
-                            
-                            data.reference = utils.formatReference('IN', nCount);
-                            data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                            const newRef = db.collection('receipts').doc();
-                            tr.set(newRef, data);
-                            return newRef.id;
+                            reference = utils.formatReference ? utils.formatReference('IN', nCount) : `IN-${nCount}`;
                         });
-                        utils.showToast("تم حفظ إذن الاستلام بنجاح", "success");
-                        this.openForm({id: t, ...data});
-                    } else {
-                        await db.collection('receipts').doc(receipt.id).update(data);
-                        utils.showToast("تم تحديث إذن الاستلام بنجاح", "success");
-                        receipt.status = newStatus;
-                        this.openForm(receipt);
-                    }
-                } catch(e) {
-                    utils.showToast(e.message, "error");
-                } finally {
-                    utils.hideLoader();
-                }
-            };
 
-            const saveBtn = document.getElementById('btn-save-draft');
-            if(saveBtn) saveBtn.addEventListener('click', () => saveReceipt(status));
+                        data.reference = reference;
+                        data.status = 'Done'; // مكتمل فوراً بدون مسودة
+                        data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                        data.validatedAt = firebase.firestore.FieldValue.serverTimestamp();
 
-            const markReady = document.getElementById('btn-mark-ready');
-            if(markReady) markReady.addEventListener('click', () => saveReceipt('Ready'));
-
-            const cancelBtn = document.getElementById('btn-cancel');
-            if(cancelBtn) cancelBtn.addEventListener('click', async () => {
-                if(await utils.showConfirm("إلغاء الإذن", "هل أنت متأكد من رغبتك في إلغاء إذن الاستلام هذا؟")) saveReceipt('Canceled');
-            });
-
-            // الاعتماد وإضافة الكميات للمخزون
-            const validateBtn = document.getElementById('btn-validate');
-            if(validateBtn) {
-                validateBtn.addEventListener('click', async () => {
-                    const data = gatherData();
-                    if(data.lines.length === 0) return utils.showToast("يرجى إضافة أصناف إلى إذن الاستلام أولاً", "error");
-                    
-                    if(!await utils.showConfirm("اعتماد وتوريد البضاعة", "سيؤدي هذا الإجراء إلى زيادة رصيد المخزون الفعلي بالكميات الواردة. هل تريد المتابعة؟")) return;
-
-                    utils.showLoader();
-                    const db = window.fbDb;
-                    const whId = (await db.collection('warehouses').limit(1).get()).docs[0]?.id || 'default_warehouse';
-                    
-                    try {
+                        // 2. تحديث أرصدة المخزون وسجل الحركات في Batch واحد فوري
                         const batch = db.batch();
-                        
-                        for(const line of data.lines) {
+
+                        for (const line of data.lines) {
                             const sReq = await db.collection('stock')
                                 .where('productId', '==', line.productId)
-                                .where('warehouseId', '==', whId).get();
-                            
+                                .where('warehouseId', '==', whId)
+                                .limit(1)
+                                .get();
+
+                            let newOnHand = line.quantity;
+
                             if (sReq.empty) {
                                 const newStockRef = db.collection('stock').doc();
                                 batch.set(newStockRef, {
@@ -512,43 +494,67 @@ window.receiptsController = {
                                 const sDoc = sReq.docs[0];
                                 const currentOnHand = sDoc.data().onHand || 0;
                                 const currentFree = sDoc.data().freeToUse || 0;
+                                newOnHand = currentOnHand + line.quantity;
+
                                 batch.update(sDoc.ref, {
-                                    onHand: currentOnHand + line.quantity,
+                                    onHand: newOnHand,
                                     freeToUse: currentFree + line.quantity,
                                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                                 });
                             }
 
-                            // تسجيل الحركة في السجل (Ledger)
+                            // تسجيل الحركة في سجل الحركات (Ledger) كـ "الوارد"
                             const ledgerRef = db.collection('ledger').doc();
                             batch.set(ledgerRef, {
                                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                                type: "Receipt",
-                                reference: receipt.reference,
+                                type: "الوارد",
+                                reference: reference,
                                 productId: line.productId,
                                 productName: line.productLabel,
-                                contact: data.supplier || 'المورد',
-                                from: data.supplier || 'المورد',
-                                to: 'المستودع الرئيسي',
+                                contact: data.supplier,
+                                from: data.supplier,
+                                to: whName,
                                 quantity: line.quantity,
-                                qtyChange: line.quantity,
+                                qtyChange: line.quantity, // التغير في الكمية بالموجب
+                                newOnHand: newOnHand,
                                 status: "Done"
                             });
                         }
 
-                        data.status = 'Done';
-                        data.validatedAt = firebase.firestore.FieldValue.serverTimestamp();
-                        batch.update(db.collection('receipts').doc(receipt.id), data);
+                        // حفظ إذن الوارد نفسه بحالة مكتمل
+                        const newReceiptRef = db.collection('receipts').doc();
+                        batch.set(newReceiptRef, data);
 
                         await batch.commit();
-                        utils.showToast("تم اعتماد وتوريد البضاعة للمخزن بنجاح", "success");
-                        
-                        receipt.status = 'Done';
-                        this.openForm(receipt);
 
-                    } catch(err) {
-                        utils.hideLoader();
-                        utils.showToast(err.message, "error");
+                        if (window.utils && utils.showToast) {
+                            utils.showToast(`تم إتمام الوارد وزيادة المخزن فوراً بنجاح! رقم المرجع: ${reference}`, "success");
+                        }
+
+                        // فتح صفحة الإذن المكتمل مع زر الطباعة
+                        data.id = newReceiptRef.id;
+                        this.openForm(data);
+
+                    } catch (err) {
+                        console.error(err);
+                        if (window.utils && utils.showToast) utils.showToast("حدث خطأ: " + err.message, "error");
+                        directReceiveBtn.disabled = false;
+                        directReceiveBtn.textContent = "⚡ إتمام وتأكيد الوارد فوراً";
+                    } finally {
+                        if (window.utils && utils.hideLoader) utils.hideLoader();
+                    }
+                });
+            }
+        } else {
+            // زر إلغاء الإذن في حالة الرغبة
+            const cancelBtn = document.getElementById('btn-cancel');
+            if(cancelBtn) {
+                cancelBtn.addEventListener('click', async () => {
+                    if(await utils.showConfirm("إلغاء الإذن", "هل أنت متأكد من رغبتك في إلغاء عملية الوارد هذه؟")) {
+                        await window.fbDb.collection('receipts').doc(receipt.id).update({ status: 'Canceled' });
+                        receipt.status = 'Canceled';
+                        utils.showToast("تم إلغاء الإذن", "warning");
+                        this.openForm(receipt);
                     }
                 });
             }
