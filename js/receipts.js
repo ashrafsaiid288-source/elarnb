@@ -1,5 +1,5 @@
 /**
- * Receipts Controller (Incoming Operations - 1-Step Direct Incoming with Custom Reference Support)
+ * Receipts Controller (Incoming Operations - Linked with Suppliers & 1-Step Direct Execution)
  */
 
 window.receiptsController = {
@@ -270,6 +270,13 @@ window.receiptsController = {
     openForm: async function(receipt = null) {
         const isEdit = !!receipt;
 
+        // جلب قائمة الموردين المسجلين لربطهم بالقائمة المنسدلة
+        let supplierOptions = [];
+        try {
+            const sSnap = await window.fbDb.collection('suppliers').get();
+            sSnap.forEach(d => supplierOptions.push({ id: d.id, ...d.data() }));
+        } catch(e) {}
+
         this.container.innerHTML = `
             <div class="view-header" style="margin-bottom:var(--spacing-sm); border:none; padding-bottom:0;">
                 <div class="view-header-left" style="display:flex; align-items:center; gap:10px;">
@@ -301,20 +308,29 @@ window.receiptsController = {
 
             <div class="form-document" style="border-top-left-radius:0; border-top-right-radius:0; padding:1.5rem; background:var(--surface); border:1px solid var(--border); border-radius:0 0 var(--border-radius) var(--border-radius);">
                 
-                <!-- شبكة البيانات الأساسية مع خانة الكود المرجعي اليدوي -->
                 <div class="form-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1.2rem; margin-bottom:1.5rem;">
                     
                     <div class="form-group">
                         <label style="display:block; font-weight:700; margin-bottom:0.4rem;">
                             رقم المرجع / الكود المرجعي:
-                            <small style="color:var(--text-muted); font-weight:normal; font-size:0.75rem;">(اختياري - سيتم التوليد تلقائياً إذا تُرِك فارغاً)</small>
+                            <small style="color:var(--text-muted); font-weight:normal; font-size:0.75rem;">(اختياري - تلقائي إذا تُرِك فارغاً)</small>
                         </label>
                         <input type="text" id="r-reference" value="${isEdit ? (receipt.reference || '') : ''}" placeholder="مثال: INV-2026 أو فاتورة-45" ${isEdit ? 'disabled' : ''} style="width:100%; padding:0.65rem; border-radius:6px; border:1.5px solid var(--border); font-family:monospace; font-weight:700;">
                     </div>
 
+                    <!-- خانة المورد المربوطة بقاعدة بيانات الموردين -->
                     <div class="form-group">
                         <label style="display:block; font-weight:700; margin-bottom:0.4rem;">المورد / جهة التوريد: <span style="color:red;">*</span></label>
-                        <input type="text" id="r-supplier" value="${isEdit ? (receipt.supplier || '') : ''}" placeholder="مثال: ورشة الصياغة / شركة التوريد" ${isEdit ? 'disabled' : ''} style="width:100%; padding:0.65rem; border-radius:6px; border:1px solid var(--border);">
+                        ${isEdit ? `
+                            <input type="text" id="r-supplier" value="${receipt.supplier || ''}" disabled style="width:100%; padding:0.65rem; border-radius:6px; border:1px solid var(--border); font-weight:700;">
+                        ` : (supplierOptions.length > 0 ? `
+                            <select id="r-supplier" required style="width:100%; padding:0.65rem; border-radius:6px; border:1.5px solid var(--border); font-weight:700; font-size:0.9rem;">
+                                <option value="" disabled selected>-- اختر المورد المسجل --</option>
+                                ${supplierOptions.map(s => `<option value="${s.name}">[${s.code || 'SUP'}] ${s.name} ${s.phone ? `(${s.phone})` : ''}</option>`).join('')}
+                            </select>
+                        ` : `
+                            <input type="text" id="r-supplier" placeholder="اكتب اسم المورد (أو كوّده من شاشة الموردين)" required style="width:100%; padding:0.65rem; border-radius:6px; border:1.5px solid var(--border);">
+                        `)}
                     </div>
 
                     <div class="form-group">
@@ -410,8 +426,10 @@ window.receiptsController = {
                     });
                 }
             });
+
+            const supEl = document.getElementById('r-supplier');
             return {
-                supplier: document.getElementById('r-supplier').value.trim(),
+                supplier: supEl ? supEl.value.trim() : '',
                 scheduleDate: document.getElementById('r-date').value,
                 customReference: document.getElementById('r-reference') ? document.getElementById('r-reference').value.trim() : '',
                 lines: newLines
@@ -436,13 +454,13 @@ window.receiptsController = {
                 if(e.target.classList.contains('btn-remove-line')) e.target.closest('tr').remove();
             });
 
-            // ================== زرار الإتمام الفوري مع دعم الكود المرجعي اليدوي ==================
+            // زرار الإتمام الفوري
             const directReceiveBtn = document.getElementById('btn-direct-receive');
             if (directReceiveBtn) {
                 directReceiveBtn.addEventListener('click', async () => {
                     const data = gatherData();
                     if(!data.supplier) {
-                        return utils.showToast("يرجى كتابة اسم المورد أو جهة التوريد", "error");
+                        return utils.showToast("يرجى اختيار المورد من القائمة", "error");
                     }
                     if(data.lines.length === 0) {
                         return utils.showToast("يرجى اختيار صنف واحد على الأقل وتحديد الكمية", "error");
@@ -458,11 +476,9 @@ window.receiptsController = {
                         const whId = !whSnap.empty ? whSnap.docs[0].id : 'default_warehouse';
                         const whName = !whSnap.empty ? (whSnap.docs[0].data().name || 'المستودع الرئيسي') : 'المستودع الرئيسي';
 
-                        // 1. تحديد رقم المرجع: استخدام الكود اليدوي إذا تم إدخاله، أو التوليد التلقائي
+                        // رقم المرجع
                         let reference = data.customReference;
-
                         if (!reference) {
-                            // التوليد التلقائي إذا كانت الخانة فارغة
                             await db.runTransaction(async (tr) => {
                                 const cRef = db.collection('counters').doc('receipts');
                                 const cDoc = await tr.get(cRef);
@@ -474,11 +490,10 @@ window.receiptsController = {
                         }
 
                         data.reference = reference;
-                        data.status = 'Done'; // مكتمل فوراً
+                        data.status = 'Done';
                         data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
                         data.validatedAt = firebase.firestore.FieldValue.serverTimestamp();
 
-                        // 2. تحديث أرصدة المخزون وسجل الحركات (Ledger)
                         const batch = db.batch();
 
                         for (const line of data.lines) {
@@ -512,7 +527,7 @@ window.receiptsController = {
                                 });
                             }
 
-                            // تسجيل الحركة في سجل الحركات (Ledger) برقم المرجع المخصص
+                            // تسجيل الحركة في سجل الحركات
                             const ledgerRef = db.collection('ledger').doc();
                             batch.set(ledgerRef, {
                                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
@@ -530,7 +545,6 @@ window.receiptsController = {
                             });
                         }
 
-                        // حفظ إذن الوارد
                         const newReceiptRef = db.collection('receipts').doc();
                         batch.set(newReceiptRef, data);
 
