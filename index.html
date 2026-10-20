@@ -1096,8 +1096,10 @@
                     </ul>
                 </li>
                 <li><a href="#" data-route="products" class="nav-item">المنتجات</a></li>
-                <!-- إضافة شاشة الموردين في شريط التنقل -->
-                <li><a href="#" data-route="suppliers" class="nav-item">الموردين</a></li>
+                
+                <!-- زرار شاشة الموردين مدعوم بتشغيل فوري وتلقائي مباشر -->
+                <li><a href="#" data-route="suppliers" class="nav-item" onclick="if(window.appRouter && window.appRouter.loadRoute){ window.appRouter.loadRoute('suppliers'); } else { document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); const v=document.getElementById('view-suppliers'); if(v){ v.classList.add('active'); if(window.suppliersController){ window.suppliersController.init(v); } } }">الموردين</a></li>
+                
                 <li><a href="#" data-route="stock" class="nav-item">المخزون الحالي</a></li>
                 <li><a href="#" data-route="move-history" class="nav-item">سجل الحركات</a></li>
                 <li class="dropdown">
@@ -1142,28 +1144,28 @@
     <div id="modal-container"></div>
     <div id="global-loader" class="hidden"><div class="spinner"></div></div>
 
-    <!-- SCRIPTS (CACHE BUSTED v=25) -->
-    <script src="js/firebase-config.js?v=25"></script>
-    <script src="js/utils.js?v=25"></script>
-    <script src="js/seed.js?v=25"></script>
-    <script src="js/auth.js?v=25"></script>
+    <!-- SCRIPTS (تم رفع رقم الإصدار v=26 لإجبار المتصفح على قراءة الملفات الجديدة فوراً وتخطي الكاش) -->
+    <script src="js/firebase-config.js?v=26"></script>
+    <script src="js/utils.js?v=26"></script>
+    <script src="js/seed.js?v=26"></script>
+    <script src="js/auth.js?v=26"></script>
     
     <!-- View Controllers -->
-    <script src="js/dashboard.js?v=25"></script>
-    <script src="js/products.js?v=25"></script>
+    <script src="js/dashboard.js?v=26"></script>
+    <script src="js/products.js?v=26"></script>
     <!-- استدعاء ملف الموردين -->
-    <script src="js/suppliers.js?v=25"></script>
-    <script src="js/receipts.js?v=25"></script>
-    <script src="js/deliveries.js?v=25"></script>
-    <script src="js/transfers.js?v=25"></script>
-    <script src="js/adjustments.js?v=25"></script>
-    <script src="js/stock.js?v=25"></script>
-    <script src="js/moveHistory.js?v=25"></script>
-    <script src="js/settings.js?v=25"></script>
-    <script src="js/profile.js?v=25"></script>
+    <script src="js/suppliers.js?v=26"></script>
+    <script src="js/receipts.js?v=26"></script>
+    <script src="js/deliveries.js?v=26"></script>
+    <script src="js/transfers.js?v=26"></script>
+    <script src="js/adjustments.js?v=26"></script>
+    <script src="js/stock.js?v=26"></script>
+    <script src="js/moveHistory.js?v=26"></script>
+    <script src="js/settings.js?v=26"></script>
+    <script src="js/profile.js?v=26"></script>
     
     <!-- Main App Logic -->
-    <script src="js/app.js?v=25"></script>
+    <script src="js/app.js?v=26"></script>
 
     <!-- تسجيل تطبيق الـ PWA للعمل كبرنامج مستقل -->
     <script>
