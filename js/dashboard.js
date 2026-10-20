@@ -1,5 +1,5 @@
 /**
- * Dashboard Controller (Fail-Safe & Instant Render)
+ * Dashboard Controller with Financial Valuation & Low Stock Alerts
  */
 window.dashboardController = {
     lowStockThreshold: 5,
@@ -8,22 +8,72 @@ window.dashboardController = {
     init: async function(container) {
         this.container = container;
         
-        // 1. رسم هيكل الكروت فوراً حتى لا تظهر الصفحة بيضاء نهائياً
+        // 1. رسم هيكل الكروت فوراً لمنع الشاشة البيضاء
         this.renderInitialLayout();
 
-        // 2. جلب البيانات وتحديث الأرقام بأمان
+        // 2. حساب المؤشرات المالية وجلب الأرقام في الخلفية
         await this.loadDashboardData();
+    },
+
+    // دالة لتنسيق الأرقام والعملة بوضوح
+    formatCurrency: function(num) {
+        return Number(num || 0).toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }) + ' ج.م';
     },
 
     renderInitialLayout: function() {
         this.container.innerHTML = `
             <div class="view-header">
                 <div class="view-header-left">
-                    <h2 class="view-title">نظرة عامة على المخازن</h2>
+                    <h2 class="view-title">نظرة عامة والتقييم المالي</h2>
                 </div>
             </div>
 
-            <!-- شبكة الكروت الأساسية -->
+            <!-- 1. شريط المؤشرات المالية التنفيذية (Financial Valuation Cards) -->
+            <div class="dashboard-grid" style="margin-bottom: 1.5rem;">
+                <!-- قيمة رأس المال المخزن (تكلفة الشراء) -->
+                <div class="summary-card" style="border-top: 4px solid var(--primary); cursor: default;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3>قيمة رأس المال المخزن</h3>
+                        <span class="badge badge-draft">سعر التكلفة</span>
+                    </div>
+                    <div class="huge-number" id="dash-total-cost" style="color: var(--primary); font-size: 2.2rem;">...</div>
+                    <div class="stat-line">
+                        <span>إجمالي التكلفة الفعلية للبضاعة</span>
+                        <span style="font-weight: 700; color: var(--text-muted);">رصيد المخزن</span>
+                    </div>
+                </div>
+
+                <!-- القيمة السوقية للبضاعة (سعر البيع) -->
+                <div class="summary-card" style="border-top: 4px solid var(--status-done); cursor: default;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3>القيمة السوقية التقديرية</h3>
+                        <span class="badge badge-done">سعر البيع</span>
+                    </div>
+                    <div class="huge-number" id="dash-total-sale" style="color: var(--status-done); font-size: 2.2rem;">...</div>
+                    <div class="stat-line">
+                        <span>العائد الإجمالي المتوقع</span>
+                        <span style="font-weight: 700; color: var(--status-done);">عند التصفية</span>
+                    </div>
+                </div>
+
+                <!-- هامش الربح الإجمالي المتوقع -->
+                <div class="summary-card" style="border-top: 4px solid var(--status-waiting); cursor: default;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3>الأرباح الكامنة بالمخزن</h3>
+                        <span class="badge badge-waiting" id="dash-profit-margin">0%</span>
+                    </div>
+                    <div class="huge-number" id="dash-total-profit" style="color: var(--status-waiting); font-size: 2.2rem;">...</div>
+                    <div class="stat-line">
+                        <span>هامش الربح المتوقع</span>
+                        <span style="font-weight: 700;">فارق البيع والتكلفة</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. شبكة كروت الحركة والمخزون التشغيلي -->
             <div class="dashboard-grid">
                 <!-- كارت الوارد -->
                 <div class="summary-card" onclick="window.appRouter.loadRoute('receipts')">
@@ -58,7 +108,7 @@ window.dashboardController = {
                     </div>
                 </div>
 
-                <!-- إجمالي المنتجات -->
+                <!-- إجمالي المنتجات المسجلة -->
                 <div class="summary-card" onclick="window.appRouter.loadRoute('products')">
                     <h3>إجمالي الأصناف المسجلة</h3>
                     <div class="huge-number" id="dash-products-count">...</div>
@@ -69,7 +119,7 @@ window.dashboardController = {
                 </div>
             </div>
 
-            <!-- حاوية تفاصيل النواقص السريعة -->
+            <!-- 3. حاوية تفاصيل النواقص السريعة -->
             <div id="low-stock-details-section" class="table-container hidden">
                 <div style="padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; background: #fff1f2; border-bottom: 1px solid #fecdd3;">
                     <strong style="color: #9f1239;">قائمة الأصناف التي قاربت على النفاد وتحتاج إعادة طلب فورية:</strong>
@@ -81,6 +131,7 @@ window.dashboardController = {
                             <th>كود الصنف (SKU)</th>
                             <th>اسم الصنف</th>
                             <th>الرصيد المتبقي</th>
+                            <th>تكلفة الوحدة</th>
                             <th>حالة الطلب</th>
                         </tr>
                     </thead>
@@ -89,31 +140,38 @@ window.dashboardController = {
             </div>
         `;
 
-        // إضافة أحداث كارت النواقص
-        document.getElementById('btn-show-low-stock').addEventListener('click', () => {
-            const detailsSection = document.getElementById('low-stock-details-section');
-            const tbody = document.getElementById('low-stock-tbody');
-            
-            if (this.lowStockItems.length === 0) {
-                return utils.showToast("المخزون ممتاز، لا توجد أي نواقص حالياً!", "success");
-            }
+        // أحداث كارت النواقص
+        const alertCard = document.getElementById('btn-show-low-stock');
+        const detailsSection = document.getElementById('low-stock-details-section');
+        const closeBtn = document.getElementById('btn-close-low-stock');
+        const tbody = document.getElementById('low-stock-tbody');
 
-            tbody.innerHTML = this.lowStockItems.map(item => `
-                <tr>
-                    <td><strong>${item.sku}</strong></td>
-                    <td>${item.name}</td>
-                    <td><span class="badge badge-canceled">${item.qty} قطع فقط</span></td>
-                    <td><span style="color: var(--error); font-weight: 700;">يلزم عمل إذن استلام</span></td>
-                </tr>
-            `).join('');
+        if (alertCard && detailsSection) {
+            alertCard.addEventListener('click', () => {
+                if (this.lowStockItems.length === 0) {
+                    return utils.showToast("المخزون آمن بالكامل، لا توجد أي نواقص حالياً!", "success");
+                }
 
-            detailsSection.classList.remove('hidden');
-            detailsSection.scrollIntoView({ behavior: 'smooth' });
-        });
+                tbody.innerHTML = this.lowStockItems.map(item => `
+                    <tr>
+                        <td><strong>${item.sku}</strong></td>
+                        <td>${item.name}</td>
+                        <td><span class="badge badge-canceled">${item.qty} قطع فقط</span></td>
+                        <td>${this.formatCurrency(item.cost)}</td>
+                        <td><span style="color: var(--error); font-weight: 700;">يلزم عمل إذن استلام</span></td>
+                    </tr>
+                `).join('');
 
-        document.getElementById('btn-close-low-stock').addEventListener('click', () => {
-            document.getElementById('low-stock-details-section').classList.add('hidden');
-        });
+                detailsSection.classList.remove('hidden');
+                detailsSection.scrollIntoView({ behavior: 'smooth' });
+            });
+        }
+
+        if (closeBtn && detailsSection) {
+            closeBtn.addEventListener('click', () => {
+                detailsSection.classList.add('hidden');
+            });
+        }
     },
 
     loadDashboardData: async function() {
@@ -121,7 +179,7 @@ window.dashboardController = {
         if (!db) return;
 
         try {
-            // جلب البيانات مع تأمين ضد أخطاء الفلاتر
+            // جلب البيانات بشكل متوازي لتسريع وقت الاستجابة
             const [productsSnap, stockSnap, receiptsSnap, deliveriesSnap] = await Promise.all([
                 db.collection('products').get().catch(() => ({ size: 0, forEach: () => {} })),
                 db.collection('stock').get().catch(() => ({ size: 0, forEach: () => {} })),
@@ -129,33 +187,58 @@ window.dashboardController = {
                 db.collection('deliveries').get().catch(() => ({ size: 0, docs: [] }))
             ]);
 
-            // فلترة الأذون الجاهزة محلياً في الذاكرة لعدم الاعتماد على قواعد فايربيز المعقدة
-            const readyReceipts = receiptsSnap.docs ? receiptsSnap.docs.filter(d => d.data().status === 'Ready').length : 0;
-            const readyDeliveries = deliveriesSnap.docs ? deliveriesSnap.docs.filter(d => d.data().status === 'Ready').length : 0;
-
-            // حساب أرصدة المنتجات
+            // تجميع أرصدة المخزون لكل منتج
             const stockMap = {};
             stockSnap.forEach(doc => {
                 const data = doc.data();
-                stockMap[data.productId] = (stockMap[data.productId] || 0) + (Number(data.freeToUse || data.onHand) || 0);
+                const pId = data.productId;
+                const qty = Number(data.freeToUse ?? data.onHand) || 0;
+                stockMap[pId] = (stockMap[pId] || 0) + qty;
             });
 
-            // تحديد النواقص
+            // حساب المؤشرات المالية وفحص النواقص
+            let totalCostValue = 0;
+            let totalSaleValue = 0;
             this.lowStockItems = [];
+
             productsSnap.forEach(doc => {
                 const prod = doc.data();
                 const currentQty = stockMap[doc.id] || 0;
+                const unitCost = Number(prod.perUnitCost) || 0;
+                const unitSale = Number(prod.salePrice) || (unitCost > 0 ? unitCost * 1.25 : 0);
+
+                totalCostValue += (currentQty * unitCost);
+                totalSaleValue += (currentQty * unitSale);
+
                 if (currentQty <= this.lowStockThreshold) {
                     this.lowStockItems.push({
                         id: doc.id,
-                        name: prod.name || 'منتج',
+                        name: prod.name || 'منتج غير مسمى',
                         sku: prod.sku || '-',
-                        qty: currentQty
+                        qty: currentQty,
+                        cost: unitCost
                     });
                 }
             });
 
-            // تحديث الأرقام داخل الواجهة المرسومة
+            const totalProfit = totalSaleValue - totalCostValue;
+            const profitMargin = totalCostValue > 0 ? ((totalProfit / totalCostValue) * 100).toFixed(1) : 0;
+
+            const readyReceipts = receiptsSnap.docs ? receiptsSnap.docs.filter(d => d.data().status === 'Ready').length : 0;
+            const readyDeliveries = deliveriesSnap.docs ? deliveriesSnap.docs.filter(d => d.data().status === 'Ready').length : 0;
+
+            // تحديث قيم الكروت المالية
+            const costEl = document.getElementById('dash-total-cost');
+            const saleEl = document.getElementById('dash-total-sale');
+            const profitEl = document.getElementById('dash-total-profit');
+            const marginEl = document.getElementById('dash-profit-margin');
+
+            if (costEl) costEl.textContent = this.formatCurrency(totalCostValue);
+            if (saleEl) saleEl.textContent = this.formatCurrency(totalSaleValue);
+            if (profitEl) profitEl.textContent = this.formatCurrency(totalProfit);
+            if (marginEl) marginEl.textContent = `+${profitMargin}% ربح`;
+
+            // تحديث الكروت التشغيلية
             const pCountEl = document.getElementById('dash-products-count');
             const rCountEl = document.getElementById('dash-receipts-count');
             const dCountEl = document.getElementById('dash-deliveries-count');
@@ -172,16 +255,17 @@ window.dashboardController = {
             if (rBadge) rBadge.textContent = `${readyReceipts} أذون`;
             if (dBadge) dBadge.textContent = `${readyDeliveries} طلبات`;
             if (lBadge) {
-                lBadge.textContent = this.lowStockItems.length > 0 ? 'نواقص حرجة' : 'آمن';
+                lBadge.textContent = this.lowStockItems.length > 0 ? 'نواقص حرجة' : 'المخزون آمن';
                 lBadge.className = `badge ${this.lowStockItems.length > 0 ? 'badge-canceled' : 'badge-done'}`;
             }
 
             if (this.lowStockItems.length > 0) {
-                utils.showToast(`⚠️ تنبيه: يوجد ${this.lowStockItems.length} أصناف قاربت على النفاد`, "warning");
+                utils.showToast(`⚠️ تنبيه: يوجد ${this.lowStockItems.length} أصناف قاربت على النفاد بالمستودع`, "warning");
             }
 
         } catch (err) {
             console.error("Dashboard calculation error:", err);
+            utils.showToast("تعذر احتساب بعض المؤشرات المالية للمخزون", "error");
         }
     }
 };
