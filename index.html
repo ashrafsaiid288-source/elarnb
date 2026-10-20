@@ -136,7 +136,7 @@
         }
 
         /* ==========================================================================
-           AUTHENTICATION SCREEN (Modern Glass/Card)
+           AUTHENTICATION SCREEN
            ========================================================================== */
         #auth-screen, #otp-screen {
             min-height: 100vh;
@@ -370,7 +370,7 @@
         }
 
         /* ==========================================================================
-           TOP NAVIGATION BAR (Executive Glass Header)
+           TOP NAVIGATION BAR
            ========================================================================== */
         #top-nav {
             position: fixed;
@@ -589,7 +589,7 @@
         }
 
         /* ==========================================================================
-           DASHBOARD & STATS CARDS (FINTECH LOOK)
+           DASHBOARD & STATS CARDS
            ========================================================================== */
         .dashboard-grid {
             display: grid;
@@ -714,7 +714,6 @@
             cursor: pointer;
         }
 
-        /* تمييز حركات الوارد والمنصرف */
         tbody tr.row-in td {
             color: var(--status-done);
             background-color: rgba(5, 150, 105, 0.03);
@@ -744,7 +743,7 @@
         .badge-draft    { background: var(--status-draft-bg); color: var(--status-draft); }
 
         /* ==========================================================================
-           DOCUMENTS & RECEIPTS (Pipeline View)
+           DOCUMENTS & RECEIPTS
            ========================================================================== */
         .form-document {
             background: var(--surface);
@@ -1097,6 +1096,8 @@
                     </ul>
                 </li>
                 <li><a href="#" data-route="products" class="nav-item">المنتجات</a></li>
+                <!-- إضافة شاشة الموردين في شريط التنقل -->
+                <li><a href="#" data-route="suppliers" class="nav-item">الموردين</a></li>
                 <li><a href="#" data-route="stock" class="nav-item">المخزون الحالي</a></li>
                 <li><a href="#" data-route="move-history" class="nav-item">سجل الحركات</a></li>
                 <li class="dropdown">
@@ -1122,6 +1123,8 @@
         <main id="main-content">
             <div id="view-dashboard" class="view active"></div>
             <div id="view-products" class="view"></div>
+            <!-- حاوية عرض شاشة الموردين -->
+            <div id="view-suppliers" class="view"></div>
             <div id="view-receipts" class="view"></div>
             <div id="view-deliveries" class="view"></div>
             <div id="view-transfers" class="view"></div>
@@ -1148,6 +1151,8 @@
     <!-- View Controllers -->
     <script src="js/dashboard.js?v=25"></script>
     <script src="js/products.js?v=25"></script>
+    <!-- استدعاء ملف الموردين -->
+    <script src="js/suppliers.js?v=25"></script>
     <script src="js/receipts.js?v=25"></script>
     <script src="js/deliveries.js?v=25"></script>
     <script src="js/transfers.js?v=25"></script>
