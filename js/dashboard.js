@@ -1,69 +1,21 @@
 /**
- * Dashboard Controller with Low Stock Alert Card
+ * Dashboard Controller (Fail-Safe & Instant Render)
  */
 window.dashboardController = {
-    lowStockThreshold: 5, // الحد الأدنى للتنبيه (يمكنك تغييره لأي رقم)
+    lowStockThreshold: 5,
     lowStockItems: [],
 
     init: async function(container) {
         this.container = container;
-        utils.showLoader();
-        try {
-            await this.loadDashboardData();
-        } catch (error) {
-            console.error("Dashboard error:", error);
-            utils.showToast("خطأ أثناء تحميل بيانات لوحة التحكم", "error");
-        } finally {
-            utils.hideLoader();
-        }
+        
+        // 1. رسم هيكل الكروت فوراً حتى لا تظهر الصفحة بيضاء نهائياً
+        this.renderInitialLayout();
+
+        // 2. جلب البيانات وتحديث الأرقام بأمان
+        await this.loadDashboardData();
     },
 
-    loadDashboardData: async function() {
-        const db = window.fbDb;
-        if (!db) return;
-
-        // 1. جلب المنتجات والأرصدة
-        const [productsSnap, stockSnap, receiptsSnap, deliveriesSnap] = await Promise.all([
-            db.collection('products').get(),
-            db.collection('stock').get(),
-            db.collection('receipts').where('status', '==', 'Ready').get(),
-            db.collection('deliveries').where('status', '==', 'Ready').get()
-        ]);
-
-        // تجميع كميات المخزون المتاحة لكل منتج
-        const stockMap = {};
-        stockSnap.forEach(doc => {
-            const data = doc.data();
-            stockMap[data.productId] = (stockMap[data.productId] || 0) + (Number(data.freeToUse) || 0);
-        });
-
-        // فحص المنتجات التي أوشكت على النفاد
-        this.lowStockItems = [];
-        productsSnap.forEach(doc => {
-            const prod = doc.data();
-            const currentQty = stockMap[doc.id] || 0;
-            if (currentQty <= this.lowStockThreshold) {
-                this.lowStockItems.push({
-                    id: doc.id,
-                    name: prod.name || 'منتج غير مسمى',
-                    sku: prod.sku || '-',
-                    qty: currentQty
-                });
-            }
-        });
-
-        // 2. بناء واجهة لوحة التحكم وكارت التنبيه
-        this.renderUI(receiptsSnap.size, deliveriesSnap.size, productsSnap.size);
-
-        // 3. إطلاق رسالة تنبيه فورية إذا كانت هناك نواقص
-        if (this.lowStockItems.length > 0) {
-            utils.showToast(`⚠️ تنبيه: يوجد ${this.lowStockItems.length} أصناف أوشكت على النفاد بالمخزن!`, "warning");
-        }
-    },
-
-    renderUI: function(receiptsCount, deliveriesCount, totalProducts) {
-        const lowStockCount = this.lowStockItems.length;
-
+    renderInitialLayout: function() {
         this.container.innerHTML = `
             <div class="view-header">
                 <div class="view-header-left">
@@ -71,37 +23,35 @@ window.dashboardController = {
                 </div>
             </div>
 
-            <!-- كروت المؤشرات الأساسية -->
+            <!-- شبكة الكروت الأساسية -->
             <div class="dashboard-grid">
                 <!-- كارت الوارد -->
                 <div class="summary-card" onclick="window.appRouter.loadRoute('receipts')">
                     <h3>أذون الاستلام (الوارد)</h3>
-                    <div class="huge-number">${receiptsCount}</div>
+                    <div class="huge-number" id="dash-receipts-count">...</div>
                     <div class="stat-line">
                         <span>أذون جاهزة للاستلام</span>
-                        <span class="badge badge-ready">${receiptsCount} أذون</span>
+                        <span class="badge badge-ready" id="dash-receipts-badge">جاري الفحص</span>
                     </div>
                 </div>
 
                 <!-- كارت المنصرف -->
                 <div class="summary-card" onclick="window.appRouter.loadRoute('deliveries')">
                     <h3>أذون الصرف (المنصرف)</h3>
-                    <div class="huge-number">${deliveriesCount}</div>
+                    <div class="huge-number" id="dash-deliveries-count">...</div>
                     <div class="stat-line">
                         <span>طلبات جاهزة للتجهيز</span>
-                        <span class="badge badge-waiting">${deliveriesCount} طلبات</span>
+                        <span class="badge badge-waiting" id="dash-deliveries-badge">جاري الفحص</span>
                     </div>
                 </div>
 
-                <!-- كارت تنبيه النواقص (Alert Card) -->
+                <!-- كارت تنبيه النواقص -->
                 <div class="summary-card" id="btn-show-low-stock" style="border-right: 4px solid var(--error); cursor: pointer;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <h3 style="color: var(--error);">تنبيه النواقص والعجز</h3>
-                        <span class="badge ${lowStockCount > 0 ? 'badge-canceled' : 'badge-done'}">
-                            ${lowStockCount > 0 ? 'مخزون منخفض' : 'المخزون آمن'}
-                        </span>
+                        <span class="badge badge-canceled" id="dash-lowstock-badge">متابعة</span>
                     </div>
-                    <div class="huge-number" style="color: var(--error);">${lowStockCount}</div>
+                    <div class="huge-number" style="color: var(--error);" id="dash-lowstock-count">0</div>
                     <div class="stat-line">
                         <span>أصناف رصيدها (5 أو أقل)</span>
                         <span style="font-weight: 700; color: var(--error);">اضغط لعرض النواقص</span>
@@ -111,7 +61,7 @@ window.dashboardController = {
                 <!-- إجمالي المنتجات -->
                 <div class="summary-card" onclick="window.appRouter.loadRoute('products')">
                     <h3>إجمالي الأصناف المسجلة</h3>
-                    <div class="huge-number">${totalProducts}</div>
+                    <div class="huge-number" id="dash-products-count">...</div>
                     <div class="stat-line">
                         <span>قائمة المنتجات الكلية</span>
                         <span class="badge badge-draft">عرض الكتالوج</span>
@@ -139,38 +89,99 @@ window.dashboardController = {
             </div>
         `;
 
-        // إضافة أحداث الضغط لعرض وإخفاء قائمة النواقص
-        const alertCard = document.getElementById('btn-show-low-stock');
-        const detailsSection = document.getElementById('low-stock-details-section');
-        const closeBtn = document.getElementById('btn-close-low-stock');
-        const tbody = document.getElementById('low-stock-tbody');
+        // إضافة أحداث كارت النواقص
+        document.getElementById('btn-show-low-stock').addEventListener('click', () => {
+            const detailsSection = document.getElementById('low-stock-details-section');
+            const tbody = document.getElementById('low-stock-tbody');
+            
+            if (this.lowStockItems.length === 0) {
+                return utils.showToast("المخزون ممتاز، لا توجد أي نواقص حالياً!", "success");
+            }
 
-        if (alertCard && detailsSection) {
-            alertCard.addEventListener('click', () => {
-                if (this.lowStockItems.length === 0) {
-                    utils.showToast("المخزون ممتاز، لا توجد أي نواقص حالياً!", "success");
-                    return;
+            tbody.innerHTML = this.lowStockItems.map(item => `
+                <tr>
+                    <td><strong>${item.sku}</strong></td>
+                    <td>${item.name}</td>
+                    <td><span class="badge badge-canceled">${item.qty} قطع فقط</span></td>
+                    <td><span style="color: var(--error); font-weight: 700;">يلزم عمل إذن استلام</span></td>
+                </tr>
+            `).join('');
+
+            detailsSection.classList.remove('hidden');
+            detailsSection.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        document.getElementById('btn-close-low-stock').addEventListener('click', () => {
+            document.getElementById('low-stock-details-section').classList.add('hidden');
+        });
+    },
+
+    loadDashboardData: async function() {
+        const db = window.fbDb;
+        if (!db) return;
+
+        try {
+            // جلب البيانات مع تأمين ضد أخطاء الفلاتر
+            const [productsSnap, stockSnap, receiptsSnap, deliveriesSnap] = await Promise.all([
+                db.collection('products').get().catch(() => ({ size: 0, forEach: () => {} })),
+                db.collection('stock').get().catch(() => ({ size: 0, forEach: () => {} })),
+                db.collection('receipts').get().catch(() => ({ size: 0, docs: [] })),
+                db.collection('deliveries').get().catch(() => ({ size: 0, docs: [] }))
+            ]);
+
+            // فلترة الأذون الجاهزة محلياً في الذاكرة لعدم الاعتماد على قواعد فايربيز المعقدة
+            const readyReceipts = receiptsSnap.docs ? receiptsSnap.docs.filter(d => d.data().status === 'Ready').length : 0;
+            const readyDeliveries = deliveriesSnap.docs ? deliveriesSnap.docs.filter(d => d.data().status === 'Ready').length : 0;
+
+            // حساب أرصدة المنتجات
+            const stockMap = {};
+            stockSnap.forEach(doc => {
+                const data = doc.data();
+                stockMap[data.productId] = (stockMap[data.productId] || 0) + (Number(data.freeToUse || data.onHand) || 0);
+            });
+
+            // تحديد النواقص
+            this.lowStockItems = [];
+            productsSnap.forEach(doc => {
+                const prod = doc.data();
+                const currentQty = stockMap[doc.id] || 0;
+                if (currentQty <= this.lowStockThreshold) {
+                    this.lowStockItems.push({
+                        id: doc.id,
+                        name: prod.name || 'منتج',
+                        sku: prod.sku || '-',
+                        qty: currentQty
+                    });
                 }
-
-                // تعبئة الجدول
-                tbody.innerHTML = this.lowStockItems.map(item => `
-                    <tr>
-                        <td><strong>${item.sku}</strong></td>
-                        <td>${item.name}</td>
-                        <td><span class="badge badge-canceled">${item.qty} قطع فقط</span></td>
-                        <td><span style="color: var(--error); font-weight: 700;">يلزم عمل إذن استلام</span></td>
-                    </tr>
-                `).join('');
-
-                detailsSection.classList.remove('hidden');
-                detailsSection.scrollIntoView({ behavior: 'smooth' });
             });
-        }
 
-        if (closeBtn && detailsSection) {
-            closeBtn.addEventListener('click', () => {
-                detailsSection.classList.add('hidden');
-            });
+            // تحديث الأرقام داخل الواجهة المرسومة
+            const pCountEl = document.getElementById('dash-products-count');
+            const rCountEl = document.getElementById('dash-receipts-count');
+            const dCountEl = document.getElementById('dash-deliveries-count');
+            const lCountEl = document.getElementById('dash-lowstock-count');
+            const rBadge = document.getElementById('dash-receipts-badge');
+            const dBadge = document.getElementById('dash-deliveries-badge');
+            const lBadge = document.getElementById('dash-lowstock-badge');
+
+            if (pCountEl) pCountEl.textContent = productsSnap.size || 0;
+            if (rCountEl) rCountEl.textContent = readyReceipts;
+            if (dCountEl) dCountEl.textContent = readyDeliveries;
+            if (lCountEl) lCountEl.textContent = this.lowStockItems.length;
+
+            if (rBadge) rBadge.textContent = `${readyReceipts} أذون`;
+            if (dBadge) dBadge.textContent = `${readyDeliveries} طلبات`;
+            if (lBadge) {
+                lBadge.textContent = this.lowStockItems.length > 0 ? 'نواقص حرجة' : 'آمن';
+                lBadge.className = `badge ${this.lowStockItems.length > 0 ? 'badge-canceled' : 'badge-done'}`;
+            }
+
+            if (this.lowStockItems.length > 0) {
+                utils.showToast(`⚠️ تنبيه: يوجد ${this.lowStockItems.length} أصناف قاربت على النفاد`, "warning");
+            }
+
+        } catch (err) {
+            console.error("Dashboard calculation error:", err);
         }
     }
 };
