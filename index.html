@@ -33,25 +33,23 @@
         :root {
             --font-family: 'Cairo', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             
-            /* ألوان الواجهة النظيفة */
-            --primary: #4338ca;            /* كحلي إنديجو عميق وفاخر */
+            --primary: #4338ca;
             --primary-hover: #3730a3;
             --primary-light: #eef2ff;
             --primary-glow: rgba(67, 56, 202, 0.16);
             
-            --background: #f8fafc;         /* رمادي ثلجي راقي ومريح */
+            --background: #f8fafc;
             --surface: #ffffff;
             --surface-hover: #f1f5f9;
             --surface-card: #ffffff;
             
-            --text-main: #0f172a;          /* رمادي أسود طباعي */
-            --text-muted: #64748b;         /* رمادي توضيحي ناعم */
+            --text-main: #0f172a;
+            --text-muted: #64748b;
             --text-light: #94a3b8;
             
             --border: #e2e8f0;
             --border-subtle: #f1f5f9;
             
-            /* ألوان الحالات والكبسولات */
             --status-done: #059669;
             --status-done-bg: #ecfdf5;
             --status-waiting: #2563eb;
@@ -68,7 +66,6 @@
             --warning: #d97706;
             --info: #2563eb;
 
-            /* مقاسات وانحناءات عصرية */
             --radius-sm: 8px;
             --radius-md: 12px;
             --radius-lg: 16px;
@@ -76,7 +73,6 @@
             
             --nav-height: 70px;
             
-            /* ظلال ثلاثية الأبعاد خفيفة */
             --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.04);
             --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
             --shadow-hover: 0 12px 30px -4px rgba(15, 23, 42, 0.09), 0 4px 8px -2px rgba(15, 23, 42, 0.03);
@@ -119,7 +115,6 @@
             text-decoration: none;
         }
 
-        /* تخصيص السكرول بار */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -135,9 +130,6 @@
             background: #94a3b8;
         }
 
-        /* ==========================================================================
-           AUTHENTICATION SCREEN
-           ========================================================================== */
         #auth-screen, #otp-screen {
             min-height: 100vh;
             display: flex;
@@ -199,9 +191,6 @@
             font-size: 0.85rem;
         }
 
-        /* ==========================================================================
-           FORMS, INPUTS & CONTROLS
-           ========================================================================== */
         .form-group {
             margin-bottom: 1.25rem;
             display: flex;
@@ -283,9 +272,6 @@
             margin-top: 0.35rem;
         }
 
-        /* ==========================================================================
-           BUTTONS & ACTIONS
-           ========================================================================== */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -369,9 +355,6 @@
             padding: 0 0.85rem;
         }
 
-        /* ==========================================================================
-           TOP NAVIGATION BAR
-           ========================================================================== */
         #top-nav {
             position: fixed;
             top: 0;
@@ -424,12 +407,7 @@
             transition: all 0.15s ease;
         }
 
-        .nav-item:hover {
-            color: var(--primary);
-            background-color: var(--primary-light);
-        }
-
-        .nav-item.active {
+        .nav-item:hover, .nav-item.active {
             color: var(--primary);
             background-color: var(--primary-light);
         }
@@ -510,9 +488,6 @@
             box-shadow: 0 0 0 3px var(--primary-glow);
         }
 
-        /* ==========================================================================
-           MAIN CONTAINER & PAGE HEADERS
-           ========================================================================== */
         #main-content {
             margin-top: var(--nav-height);
             padding: 2.5rem;
@@ -560,7 +535,6 @@
             margin: 0;
         }
 
-        /* البحث الاحترافي */
         .search-container {
             display: flex;
             align-items: center;
@@ -588,9 +562,6 @@
             box-shadow: 0 0 0 3px var(--primary-glow);
         }
 
-        /* ==========================================================================
-           DASHBOARD & STATS CARDS
-           ========================================================================== */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
@@ -667,9 +638,6 @@
             margin-bottom: 2rem;
         }
 
-        /* ==========================================================================
-           EXECUTIVE MODERN TABLES
-           ========================================================================== */
         .table-container {
             background: var(--surface);
             border-radius: var(--radius-lg);
@@ -714,18 +682,6 @@
             cursor: pointer;
         }
 
-        tbody tr.row-in td {
-            color: var(--status-done);
-            background-color: rgba(5, 150, 105, 0.03);
-        }
-        tbody tr.row-out td {
-            color: var(--status-canceled);
-            background-color: rgba(220, 38, 38, 0.03);
-        }
-
-        /* ==========================================================================
-           STATUS BADGES & PILLS
-           ========================================================================== */
         .badge {
             display: inline-flex;
             align-items: center;
@@ -742,9 +698,6 @@
         .badge-canceled { background: var(--status-canceled-bg); color: var(--status-canceled); }
         .badge-draft    { background: var(--status-draft-bg); color: var(--status-draft); }
 
-        /* ==========================================================================
-           DOCUMENTS & RECEIPTS
-           ========================================================================== */
         .form-document {
             background: var(--surface);
             padding: 2.25rem;
@@ -770,23 +723,6 @@
             letter-spacing: -0.01em;
         }
 
-        .status-pipeline {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.88rem;
-            color: var(--text-muted);
-        }
-        .status-pipeline .step {
-            padding: 0.35rem 0.8rem;
-            border-radius: 6px;
-            font-weight: 700;
-        }
-        .status-pipeline .step.active {
-            color: var(--primary);
-            background: var(--primary-light);
-        }
-
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -794,9 +730,6 @@
             margin-bottom: 2rem;
         }
 
-        /* ==========================================================================
-           MODALS & POPUPS
-           ========================================================================== */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -869,9 +802,6 @@
             background: #f8fafc;
         }
 
-        /* ==========================================================================
-           TOAST NOTIFICATIONS & GLOBAL LOADER
-           ========================================================================== */
         #toast-container {
             position: fixed;
             bottom: 2rem;
@@ -937,7 +867,6 @@
         </div>
         
         <div class="auth-container">
-            <!-- Login Card -->
             <div class="auth-card" id="login-card">
                 <h2>مرحباً بك مجدداً</h2>
                 <form id="login-form">
@@ -978,7 +907,6 @@
                 </form>
             </div>
 
-            <!-- Sign Up Card -->
             <div class="auth-card hidden" id="signup-card">
                 <h2>إنشاء حساب جديد</h2>
                 <form id="signup-form">
@@ -1097,8 +1025,8 @@
                 </li>
                 <li><a href="#" data-route="products" class="nav-item">المنتجات</a></li>
                 
-                <!-- زرار شاشة الموردين مدعوم بتشغيل فوري وتلقائي مباشر -->
-                <li><a href="#" data-route="suppliers" class="nav-item" onclick="if(window.appRouter && window.appRouter.loadRoute){ window.appRouter.loadRoute('suppliers'); } else { document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); const v=document.getElementById('view-suppliers'); if(v){ v.classList.add('active'); if(window.suppliersController){ window.suppliersController.init(v); } } }">الموردين</a></li>
+                <!-- زرار الموردين مع تشغيل صريح وفوري للكنترولر المدمج بالأسفل -->
+                <li><a href="#" data-route="suppliers" class="nav-item" onclick="event.preventDefault(); document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.querySelectorAll('#top-nav .nav-item').forEach(l => l.classList.remove('active')); this.classList.add('active'); const viewSup = document.getElementById('view-suppliers'); if(viewSup){ viewSup.classList.add('active'); window.suppliersController.init(viewSup); }">الموردين</a></li>
                 
                 <li><a href="#" data-route="stock" class="nav-item">المخزون الحالي</a></li>
                 <li><a href="#" data-route="move-history" class="nav-item">سجل الحركات</a></li>
@@ -1144,28 +1072,309 @@
     <div id="modal-container"></div>
     <div id="global-loader" class="hidden"><div class="spinner"></div></div>
 
-    <!-- SCRIPTS (تم رفع رقم الإصدار v=26 لإجبار المتصفح على قراءة الملفات الجديدة فوراً وتخطي الكاش) -->
-    <script src="js/firebase-config.js?v=26"></script>
-    <script src="js/utils.js?v=26"></script>
-    <script src="js/seed.js?v=26"></script>
-    <script src="js/auth.js?v=26"></script>
+    <!-- SCRIPTS -->
+    <script src="js/firebase-config.js?v=27"></script>
+    <script src="js/utils.js?v=27"></script>
+    <script src="js/seed.js?v=27"></script>
+    <script src="js/auth.js?v=27"></script>
     
     <!-- View Controllers -->
-    <script src="js/dashboard.js?v=26"></script>
-    <script src="js/products.js?v=26"></script>
-    <!-- استدعاء ملف الموردين -->
-    <script src="js/suppliers.js?v=26"></script>
-    <script src="js/receipts.js?v=26"></script>
-    <script src="js/deliveries.js?v=26"></script>
-    <script src="js/transfers.js?v=26"></script>
-    <script src="js/adjustments.js?v=26"></script>
-    <script src="js/stock.js?v=26"></script>
-    <script src="js/moveHistory.js?v=26"></script>
-    <script src="js/settings.js?v=26"></script>
-    <script src="js/profile.js?v=26"></script>
-    
-    <!-- Main App Logic -->
-    <script src="js/app.js?v=26"></script>
+    <script src="js/dashboard.js?v=27"></script>
+    <script src="js/products.js?v=27"></script>
+    <script src="js/receipts.js?v=27"></script>
+    <script src="js/deliveries.js?v=27"></script>
+    <script src="js/transfers.js?v=27"></script>
+    <script src="js/adjustments.js?v=27"></script>
+    <script src="js/stock.js?v=27"></script>
+    <script src="js/moveHistory.js?v=27"></script>
+    <script src="js/settings.js?v=27"></script>
+    <script src="js/profile.js?v=27"></script>
+    <script src="js/app.js?v=27"></script>
+
+    <!-- =========================================================================
+         كود شاشة الموردين مدمج هنا مباشرة لضمان تشغيله 100% وتخطي أي مشاكل كاش نهائياً
+         ========================================================================= -->
+    <script>
+    window.suppliersController = {
+        suppliersList: [],
+        filteredList: [],
+
+        init: async function(container) {
+            this.container = container;
+            this.renderLayout();
+            await this.fetchData();
+            this.attachSearchEvents();
+        },
+
+        renderLayout: function() {
+            if (!this.container) return;
+            this.container.innerHTML = `
+                <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+                    <div class="view-header-left" style="display:flex; align-items:center; gap:12px;">
+                        <button class="btn btn-primary" onclick="suppliersController.openSupplierModal()" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; padding:0.6rem 1.2rem; border-radius:8px; background:var(--primary); color:#fff; border:none; cursor:pointer;">
+                            <span>👤</span>
+                            <span>+ إضافة مورد جديد</span>
+                        </button>
+                        <h2 class="view-title" style="margin:0; font-size:1.5rem; font-weight:800;">دليل الموردين وورش التوريد</h2>
+                    </div>
+                    <div class="view-header-right">
+                        <div class="search-container" style="display:flex; align-items:center; background:var(--surface-hover); border:1px solid var(--border); border-radius:8px; padding:0.4rem 0.8rem;">
+                            <input type="text" id="supplier-search" placeholder="بحث بالاسم، الكود، أو رقم الهاتف..." style="border:none; background:transparent; outline:none; width:240px; font-size:0.9rem;">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.88rem;" id="suppliers-count-label">
+                    جاري تحميل الموردين...
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>كود المورد</th>
+                                <th>اسم المورد / الورشة</th>
+                                <th>رقم الهاتف / واتساب</th>
+                                <th>العنوان / المنطقة</th>
+                                <th>نوع البضاعة / ملاحظات</th>
+                                <th style="text-align:center;">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="suppliers-tbody">
+                            <tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">جاري تحميل بيانات الموردين...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="supplier-modal-container"></div>
+            `;
+        },
+
+        fetchData: async function() {
+            if (!window.fbDb) return;
+            if (window.utils && utils.showLoader) utils.showLoader();
+
+            try {
+                const snap = await window.fbDb.collection('suppliers').orderBy('createdAt', 'desc').get();
+                this.suppliersList = [];
+
+                snap.forEach(doc => {
+                    const s = doc.data();
+                    s.id = doc.id;
+                    this.suppliersList.push(s);
+                });
+
+                this.filteredList = [...this.suppliersList];
+                this.renderTableRows();
+
+            } catch (e) {
+                console.error("Error fetching suppliers:", e);
+                // محاولة جلب بدون ترتيب لو لم يتم إنشاء حقل createdAt بعد
+                try {
+                    const fallbackSnap = await window.fbDb.collection('suppliers').get();
+                    this.suppliersList = [];
+                    fallbackSnap.forEach(doc => {
+                        const s = doc.data();
+                        s.id = doc.id;
+                        this.suppliersList.push(s);
+                    });
+                    this.filteredList = [...this.suppliersList];
+                    this.renderTableRows();
+                } catch(err2) {
+                    if (window.utils && utils.showToast) utils.showToast("خطأ أثناء تحميل الموردين", "error");
+                }
+            } finally {
+                if (window.utils && utils.hideLoader) utils.hideLoader();
+            }
+        },
+
+        renderTableRows: function() {
+            const tbody = document.getElementById('suppliers-tbody');
+            const countLabel = document.getElementById('suppliers-count-label');
+            if (!tbody) return;
+
+            if (countLabel) {
+                countLabel.textContent = `إجمالي الموردين المسجلين: ${this.filteredList.length} مورد`;
+            }
+
+            if (this.filteredList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted" style="padding:2.5rem;">لم يتم العثور على أي مورد مسجل. اضغط على "+ إضافة مورد جديد" لتكويد أول مورد.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = this.filteredList.map(s => {
+                const cleanPhone = (s.phone || '').replace(/[^0-9]/g, '');
+                const whatsappLink = cleanPhone ? `https://wa.me/2${cleanPhone}` : '#';
+
+                return `
+                    <tr>
+                        <td>
+                            <span style="font-family:monospace; font-weight:700; background:var(--surface-hover); padding:3px 8px; border-radius:4px; border:1px solid var(--border);">
+                                ${s.code || '-'}
+                            </span>
+                        </td>
+                        <td><strong style="font-size:0.95rem;">${s.name}</strong></td>
+                        <td>
+                            ${s.phone ? `
+                                <a href="${whatsappLink}" target="_blank" style="text-decoration:none; color:#16a34a; font-weight:700; font-family:monospace; display:inline-flex; align-items:center; gap:4px;">
+                                    <span>📱</span> ${s.phone}
+                                </a>
+                            ` : '<span class="text-muted">-</span>'}
+                        </td>
+                        <td>${s.address || '<span class="text-muted">-</span>'}</td>
+                        <td><span style="color:var(--text-muted); font-size:0.85rem;">${s.notes || '-'}</span></td>
+                        <td style="text-align:center;">
+                            <button class="btn btn-sm btn-secondary" onclick="suppliersController.openSupplierModal('${s.id}')" style="cursor:pointer; padding:4px 10px; border-radius:6px;" title="تعديل">✏️ تعديل</button>
+                            <button class="btn btn-sm btn-danger" onclick="suppliersController.deleteSupplier('${s.id}', '${s.name}')" style="cursor:pointer; padding:4px 10px; border-radius:6px; background:#dc2626; color:#fff; border:none; margin-right:4px;" title="حذف">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        },
+
+        openSupplierModal: function(supplierId = null) {
+            const modalContainer = document.getElementById('supplier-modal-container');
+            if (!modalContainer) return;
+
+            const isEdit = !!supplierId;
+            const supplier = isEdit ? this.suppliersList.find(s => s.id === supplierId) : null;
+            const autoCode = 'SUP-' + Math.floor(100 + Math.random() * 900);
+
+            modalContainer.innerHTML = `
+                <div class="modal-backdrop" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.55); z-index:9999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(3px);">
+                    <div class="modal-card" style="background:#fff; border-radius:14px; width:95%; max-width:500px; padding:1.5rem; box-shadow:0 15px 40px rgba(0,0,0,0.2); direction:rtl; text-align:right;">
+                        
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:0.8rem; margin-bottom:1.2rem;">
+                            <h3 style="margin:0; font-size:1.2rem; font-weight:800; display:flex; align-items:center; gap:8px;">
+                                <span>👤</span> ${isEdit ? 'تعديل بيانات المورد' : 'تكويد مورد جديد'}
+                            </h3>
+                            <button onclick="suppliersController.closeModal()" style="border:none; background:none; font-size:1.2rem; cursor:pointer; color:#888;">✕</button>
+                        </div>
+
+                        <form id="supplier-form" onsubmit="event.preventDefault(); suppliersController.saveSupplier('${supplierId || ''}');">
+                            <div style="display:flex; gap:10px; margin-bottom:1rem;">
+                                <div style="flex:1;">
+                                    <label style="display:block; font-size:0.85rem; font-weight:700; margin-bottom:0.35rem;">كود المورد: <span style="color:red;">*</span></label>
+                                    <input type="text" id="sup-code" value="${isEdit ? supplier.code : autoCode}" required style="width:100%; padding:0.65rem; border-radius:8px; border:1.5px solid #ddd; font-family:monospace; font-weight:700;">
+                                </div>
+                                <div style="flex:2;">
+                                    <label style="display:block; font-size:0.85rem; font-weight:700; margin-bottom:0.35rem;">اسم المورد / الورشة: <span style="color:red;">*</span></label>
+                                    <input type="text" id="sup-name" value="${isEdit ? supplier.name : ''}" placeholder="مثال: ورشة النور للاستانلس" required style="width:100%; padding:0.65rem; border-radius:8px; border:1.5px solid #ddd;">
+                                </div>
+                            </div>
+
+                            <div style="display:flex; gap:10px; margin-bottom:1rem;">
+                                <div style="flex:1;">
+                                    <label style="display:block; font-size:0.85rem; font-weight:700; margin-bottom:0.35rem;">رقم الهاتف / واتساب:</label>
+                                    <input type="tel" id="sup-phone" value="${isEdit ? (supplier.phone || '') : ''}" placeholder="01xxxxxxxxx" dir="ltr" style="width:100%; padding:0.65rem; border-radius:8px; border:1.5px solid #ddd;">
+                                </div>
+                                <div style="flex:1;">
+                                    <label style="display:block; font-size:0.85rem; font-weight:700; margin-bottom:0.35rem;">العنوان / المنطقة:</label>
+                                    <input type="text" id="sup-address" value="${isEdit ? (supplier.address || '') : ''}" placeholder="مثال: خان الخليلي / طنطا" style="width:100%; padding:0.65rem; border-radius:8px; border:1.5px solid #ddd;">
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom:1.4rem;">
+                                <label style="display:block; font-size:0.85rem; font-weight:700; margin-bottom:0.35rem;">نوع البضاعة / ملاحظات إضافية:</label>
+                                <input type="text" id="sup-notes" value="${isEdit ? (supplier.notes || '') : ''}" placeholder="مثال: مورد سلاسل وانسيالات ليزر 316L" style="width:100%; padding:0.65rem; border-radius:8px; border:1.5px solid #ddd;">
+                            </div>
+
+                            <div style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid #eee; padding-top:1rem;">
+                                <button type="button" onclick="suppliersController.closeModal()" style="padding:0.65rem 1.2rem; border-radius:8px; border:1px solid #ccc; background:#f7f7f7; cursor:pointer;">إلغاء</button>
+                                <button type="submit" id="btn-save-supplier" style="padding:0.65rem 1.4rem; border-radius:8px; border:none; background:#16a34a; color:#fff; font-weight:700; cursor:pointer;">
+                                    ${isEdit ? 'حفظ التعديلات' : 'تأكيد وحفظ المورد'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+        },
+
+        saveSupplier: async function(supplierId) {
+            const code = document.getElementById('sup-code').value.trim();
+            const name = document.getElementById('sup-name').value.trim();
+            const phone = document.getElementById('sup-phone').value.trim();
+            const address = document.getElementById('sup-address').value.trim();
+            const notes = document.getElementById('sup-notes').value.trim();
+
+            if (!code || !name) {
+                if (window.utils && utils.showToast) utils.showToast("يرجى ملء كود واسم المورد", "error");
+                return;
+            }
+
+            const btn = document.getElementById('btn-save-supplier');
+            if (btn) { btn.disabled = true; btn.textContent = "جاري الحفظ..."; }
+
+            try {
+                const data = {
+                    code,
+                    name,
+                    phone,
+                    address,
+                    notes,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                if (supplierId) {
+                    await window.fbDb.collection('suppliers').doc(supplierId).update(data);
+                    if (window.utils && utils.showToast) utils.showToast("تم تحديث بيانات المورد بنجاح", "success");
+                } else {
+                    data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await window.fbDb.collection('suppliers').add(data);
+                    if (window.utils && utils.showToast) utils.showToast(`تم تكويد المورد (${name}) بنجاح`, "success");
+                }
+
+                this.closeModal();
+                await this.fetchData();
+
+            } catch (err) {
+                console.error("Error saving supplier:", err);
+                if (window.utils && utils.showToast) utils.showToast("حدث خطأ أثناء حفظ المورد", "error");
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        },
+
+        deleteSupplier: async function(supplierId, supplierName) {
+            const confirmed = window.utils && utils.showConfirm 
+                ? await utils.showConfirm("حذف مورد", `هل أنت متأكد من رغبتك في حذف المورد "${supplierName}"؟`)
+                : confirm(`هل أنت متأكد من حذف "${supplierName}"؟`);
+
+            if (!confirmed) return;
+
+            try {
+                await window.fbDb.collection('suppliers').doc(supplierId).delete();
+                if (window.utils && utils.showToast) utils.showToast("تم حذف المورد بنجاح", "success");
+                await this.fetchData();
+            } catch (e) {
+                console.error(e);
+                if (window.utils && utils.showToast) utils.showToast("تعذر حذف المورد", "error");
+            }
+        },
+
+        closeModal: function() {
+            const modalContainer = document.getElementById('supplier-modal-container');
+            if (modalContainer) modalContainer.innerHTML = '';
+        },
+
+        attachSearchEvents: function() {
+            const searchInput = document.getElementById('supplier-search');
+            if (!searchInput) return;
+
+            searchInput.addEventListener('input', (e) => {
+                const val = e.target.value.trim().toLowerCase();
+                this.filteredList = this.suppliersList.filter(s => 
+                    (s.name || '').toLowerCase().includes(val) ||
+                    (s.code || '').toLowerCase().includes(val) ||
+                    (s.phone || '').toLowerCase().includes(val) ||
+                    (s.address || '').toLowerCase().includes(val)
+                );
+                this.renderTableRows();
+            });
+        }
+    };
+    </script>
 
     <!-- تسجيل تطبيق الـ PWA للعمل كبرنامج مستقل -->
     <script>
