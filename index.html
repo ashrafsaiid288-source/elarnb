@@ -6,6 +6,13 @@
     <title>CoreInventory - إدارة المخازن والمستودعات</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
     
+    <!-- إعدادات تحويل الموقع إلى تطبيق (PWA) -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4338ca">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CoreInventory">
+    
     <!-- Google Fonts (Cairo & Inter) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1132,25 +1139,36 @@
     <div id="modal-container"></div>
     <div id="global-loader" class="hidden"><div class="spinner"></div></div>
 
-    <!-- SCRIPTS (CACHE BUSTED v=20) -->
-    <script src="js/firebase-config.js?v=20"></script>
-    <script src="js/utils.js?v=20"></script>
-    <script src="js/seed.js?v=20"></script>
-    <script src="js/auth.js?v=20"></script>
+    <!-- SCRIPTS (CACHE BUSTED v=25) -->
+    <script src="js/firebase-config.js?v=25"></script>
+    <script src="js/utils.js?v=25"></script>
+    <script src="js/seed.js?v=25"></script>
+    <script src="js/auth.js?v=25"></script>
     
     <!-- View Controllers -->
-    <script src="js/dashboard.js?v=20"></script>
-    <script src="js/products.js?v=20"></script>
-    <script src="js/receipts.js?v=20"></script>
-    <script src="js/deliveries.js?v=20"></script>
-    <script src="js/transfers.js?v=20"></script>
-    <script src="js/adjustments.js?v=20"></script>
-    <script src="js/stock.js?v=20"></script>
-    <script src="js/moveHistory.js?v=20"></script>
-    <script src="js/settings.js?v=20"></script>
-    <script src="js/profile.js?v=20"></script>
+    <script src="js/dashboard.js?v=25"></script>
+    <script src="js/products.js?v=25"></script>
+    <script src="js/receipts.js?v=25"></script>
+    <script src="js/deliveries.js?v=25"></script>
+    <script src="js/transfers.js?v=25"></script>
+    <script src="js/adjustments.js?v=25"></script>
+    <script src="js/stock.js?v=25"></script>
+    <script src="js/moveHistory.js?v=25"></script>
+    <script src="js/settings.js?v=25"></script>
+    <script src="js/profile.js?v=25"></script>
     
     <!-- Main App Logic -->
-    <script src="js/app.js?v=20"></script>
+    <script src="js/app.js?v=25"></script>
+
+    <!-- تسجيل تطبيق الـ PWA للعمل كبرنامج مستقل -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(() => console.log('PWA Service Worker جاهز ويعمل بنجاح'))
+                    .catch(err => console.log('PWA Service Worker Failed:', err));
+            });
+        }
+    </script>
 </body>
 </html>
