@@ -1,5 +1,5 @@
 /**
- * Receipts Controller (Incoming Operations - 1-Step Direct Incoming "الوارد" with A4 Slip Printing)
+ * Receipts Controller (Incoming Operations - 1-Step Direct Incoming with Custom Reference Support)
  */
 
 window.receiptsController = {
@@ -268,7 +268,7 @@ window.receiptsController = {
     },
 
     openForm: async function(receipt = null) {
-        const isEdit = !!receipt; // لو موجود، يبقى استعراض لعملية تمت بالفعل
+        const isEdit = !!receipt;
 
         this.container.innerHTML = `
             <div class="view-header" style="margin-bottom:var(--spacing-sm); border:none; padding-bottom:0;">
@@ -292,7 +292,6 @@ window.receiptsController = {
                     `}
                 </div>
                 
-                <!-- عرض حالة العملية فورية وبسيطة بدون مسودة وانتظار وجاهز -->
                 <div>
                     <span class="badge" style="background:${isEdit ? '#dcfce7' : '#e0f2fe'}; color:${isEdit ? '#16a34a' : '#0284c7'}; padding:6px 14px; border-radius:50rem; font-weight:700; font-size:0.85rem;">
                         ${isEdit ? '✓ عملية وارد مكتملة (Done)' : '⚡ وارد مباشر فوري'}
@@ -301,15 +300,23 @@ window.receiptsController = {
             </div>
 
             <div class="form-document" style="border-top-left-radius:0; border-top-right-radius:0; padding:1.5rem; background:var(--surface); border:1px solid var(--border); border-radius:0 0 var(--border-radius) var(--border-radius);">
-                <div class="doc-ref text-muted" style="margin-bottom:var(--spacing-md); font-family:monospace; font-weight:700;">
-                    رقم المرجع: <span style="color:var(--primary);">${isEdit ? receipt.reference : 'سيتم التوليد تلقائياً (IN-XXXX)'}</span>
-                </div>
                 
-                <div class="form-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; margin-bottom:1.5rem;">
+                <!-- شبكة البيانات الأساسية مع خانة الكود المرجعي اليدوي -->
+                <div class="form-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1.2rem; margin-bottom:1.5rem;">
+                    
+                    <div class="form-group">
+                        <label style="display:block; font-weight:700; margin-bottom:0.4rem;">
+                            رقم المرجع / الكود المرجعي:
+                            <small style="color:var(--text-muted); font-weight:normal; font-size:0.75rem;">(اختياري - سيتم التوليد تلقائياً إذا تُرِك فارغاً)</small>
+                        </label>
+                        <input type="text" id="r-reference" value="${isEdit ? (receipt.reference || '') : ''}" placeholder="مثال: INV-2026 أو فاتورة-45" ${isEdit ? 'disabled' : ''} style="width:100%; padding:0.65rem; border-radius:6px; border:1.5px solid var(--border); font-family:monospace; font-weight:700;">
+                    </div>
+
                     <div class="form-group">
                         <label style="display:block; font-weight:700; margin-bottom:0.4rem;">المورد / جهة التوريد: <span style="color:red;">*</span></label>
                         <input type="text" id="r-supplier" value="${isEdit ? (receipt.supplier || '') : ''}" placeholder="مثال: ورشة الصياغة / شركة التوريد" ${isEdit ? 'disabled' : ''} style="width:100%; padding:0.65rem; border-radius:6px; border:1px solid var(--border);">
                     </div>
+
                     <div class="form-group">
                         <label style="display:block; font-weight:700; margin-bottom:0.4rem;">تاريخ الاستلام:</label>
                         <input type="date" id="r-date" value="${isEdit ? (receipt.scheduleDate || '') : new Date().toISOString().split('T')[0]}" ${isEdit ? 'disabled' : ''} style="width:100%; padding:0.65rem; border-radius:6px; border:1px solid var(--border);">
@@ -383,7 +390,6 @@ window.receiptsController = {
         if (lines.length > 0) {
             lines.forEach(l => tbody.appendChild(renderLine(l, lineCounter++)));
         } else if (!isEdit) {
-            // سطر أولي جاهز للإدخال
             tbody.appendChild(renderLine({}, lineCounter++));
         }
 
@@ -407,6 +413,7 @@ window.receiptsController = {
             return {
                 supplier: document.getElementById('r-supplier').value.trim(),
                 scheduleDate: document.getElementById('r-date').value,
+                customReference: document.getElementById('r-reference') ? document.getElementById('r-reference').value.trim() : '',
                 lines: newLines
             };
         };
@@ -419,7 +426,6 @@ window.receiptsController = {
             });
         }
 
-        // إضافة سطر جديد وحذف سطر
         if(!isEdit) {
             document.getElementById('add-r-line').addEventListener('click', (e) => {
                 e.preventDefault();
@@ -430,7 +436,7 @@ window.receiptsController = {
                 if(e.target.classList.contains('btn-remove-line')) e.target.closest('tr').remove();
             });
 
-            // ================== الزرار السحري: إتمام الوارد في خطوة واحدة ==================
+            // ================== زرار الإتمام الفوري مع دعم الكود المرجعي اليدوي ==================
             const directReceiveBtn = document.getElementById('btn-direct-receive');
             if (directReceiveBtn) {
                 directReceiveBtn.addEventListener('click', async () => {
@@ -448,28 +454,31 @@ window.receiptsController = {
 
                     const db = window.fbDb;
                     try {
-                        // المستودع الافتراضي
                         const whSnap = await db.collection('warehouses').limit(1).get();
                         const whId = !whSnap.empty ? whSnap.docs[0].id : 'default_warehouse';
                         const whName = !whSnap.empty ? (whSnap.docs[0].data().name || 'المستودع الرئيسي') : 'المستودع الرئيسي';
 
-                        // 1. توليد رقم المرجع آلياً وتحديث العداد
-                        let reference = 'IN-001';
-                        await db.runTransaction(async (tr) => {
-                            const cRef = db.collection('counters').doc('receipts');
-                            const cDoc = await tr.get(cRef);
-                            let nCount = 1;
-                            if(cDoc.exists) nCount = (cDoc.data().count || 0) + 1;
-                            tr.set(cRef, { count: nCount }, { merge: true });
-                            reference = utils.formatReference ? utils.formatReference('IN', nCount) : `IN-${nCount}`;
-                        });
+                        // 1. تحديد رقم المرجع: استخدام الكود اليدوي إذا تم إدخاله، أو التوليد التلقائي
+                        let reference = data.customReference;
+
+                        if (!reference) {
+                            // التوليد التلقائي إذا كانت الخانة فارغة
+                            await db.runTransaction(async (tr) => {
+                                const cRef = db.collection('counters').doc('receipts');
+                                const cDoc = await tr.get(cRef);
+                                let nCount = 1;
+                                if(cDoc.exists) nCount = (cDoc.data().count || 0) + 1;
+                                tr.set(cRef, { count: nCount }, { merge: true });
+                                reference = utils.formatReference ? utils.formatReference('IN', nCount) : `IN-${nCount}`;
+                            });
+                        }
 
                         data.reference = reference;
-                        data.status = 'Done'; // مكتمل فوراً بدون مسودة
+                        data.status = 'Done'; // مكتمل فوراً
                         data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
                         data.validatedAt = firebase.firestore.FieldValue.serverTimestamp();
 
-                        // 2. تحديث أرصدة المخزون وسجل الحركات في Batch واحد فوري
+                        // 2. تحديث أرصدة المخزون وسجل الحركات (Ledger)
                         const batch = db.batch();
 
                         for (const line of data.lines) {
@@ -503,7 +512,7 @@ window.receiptsController = {
                                 });
                             }
 
-                            // تسجيل الحركة في سجل الحركات (Ledger) كـ "الوارد"
+                            // تسجيل الحركة في سجل الحركات (Ledger) برقم المرجع المخصص
                             const ledgerRef = db.collection('ledger').doc();
                             batch.set(ledgerRef, {
                                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
@@ -515,23 +524,22 @@ window.receiptsController = {
                                 from: data.supplier,
                                 to: whName,
                                 quantity: line.quantity,
-                                qtyChange: line.quantity, // التغير في الكمية بالموجب
+                                qtyChange: line.quantity,
                                 newOnHand: newOnHand,
                                 status: "Done"
                             });
                         }
 
-                        // حفظ إذن الوارد نفسه بحالة مكتمل
+                        // حفظ إذن الوارد
                         const newReceiptRef = db.collection('receipts').doc();
                         batch.set(newReceiptRef, data);
 
                         await batch.commit();
 
                         if (window.utils && utils.showToast) {
-                            utils.showToast(`تم إتمام الوارد وزيادة المخزن فوراً بنجاح! رقم المرجع: ${reference}`, "success");
+                            utils.showToast(`تم إتمام الوارد وزيادة رصيد المخزن فوراً! كود المرجع: ${reference}`, "success");
                         }
 
-                        // فتح صفحة الإذن المكتمل مع زر الطباعة
                         data.id = newReceiptRef.id;
                         this.openForm(data);
 
@@ -546,7 +554,6 @@ window.receiptsController = {
                 });
             }
         } else {
-            // زر إلغاء الإذن في حالة الرغبة
             const cancelBtn = document.getElementById('btn-cancel');
             if(cancelBtn) {
                 cancelBtn.addEventListener('click', async () => {
