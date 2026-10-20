@@ -1,5 +1,5 @@
 /**
- * Suppliers Controller (شاشة تكويد وإدارة الموردين - تشغيل تلقائي ذكي)
+ * Suppliers Controller (شاشة تكويد وإدارة الموردين)
  */
 
 window.suppliersController = {
@@ -53,7 +53,6 @@ window.suppliersController = {
                 </table>
             </div>
 
-            <!-- حاوية المودال المنبثق -->
             <div id="supplier-modal-container"></div>
         `;
     },
@@ -147,7 +146,6 @@ window.suppliersController = {
                     </div>
 
                     <form id="supplier-form" onsubmit="event.preventDefault(); suppliersController.saveSupplier('${supplierId || ''}');">
-                        
                         <div style="display:flex; gap:10px; margin-bottom:1rem;">
                             <div style="flex:1;">
                                 <label style="display:block; font-size:0.85rem; font-weight:700; margin-bottom:0.35rem;">كود المورد: <span style="color:red;">*</span></label>
@@ -270,24 +268,3 @@ window.suppliersController = {
         });
     }
 };
-
-// =========================================================================
-// السحر هنا: استماع وتشغيل تلقائي فور الضغط على زرار الموردين في القائمة
-// =========================================================================
-document.addEventListener('click', function(e) {
-    const navBtn = e.target.closest('[data-route="suppliers"]');
-    if (navBtn) {
-        const container = document.getElementById('view-suppliers');
-        if (container) {
-            window.suppliersController.init(container);
-        }
-    }
-});
-
-// فحص أولي في حالة تم فتح الصفحة مباشرة
-setTimeout(() => {
-    const container = document.getElementById('view-suppliers');
-    if (container && container.classList.contains('active')) {
-        window.suppliersController.init(container);
-    }
-}, 200);
