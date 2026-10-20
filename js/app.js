@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'adjustments': window.adjustmentsController,
         'stock': window.stockController,
         'move-history': window.moveHistoryController,
+        'shop': window.shopController,
         'settings-warehouses': window.settingsWarehousesController,
         'settings-locations': window.settingsLocationsController,
         'profile': window.profileController
@@ -59,6 +60,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (routes[routeName] && typeof routes[routeName].init === 'function') {
             routes[routeName].init(targetView);
         }
+
+        // Render Lucide Icons after view content mounts
+        if (window.lucide) {
+            setTimeout(() => {
+                window.lucide.createIcons();
+            }, 50);
+        }
     }
 
     // Attach click listeners to nav links
@@ -73,6 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Make router globally available
     window.appRouter = { loadRoute };
     
-    // Initial Load - Will be triggered by auth.js once login confirms
+    // Initial Icon Render for static shell (Navbar & Auth screens)
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
 });
-
