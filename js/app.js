@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const routes = {
         'dashboard': window.dashboardController,
         'products': window.productsController,
+        'suppliers': window.suppliersController, // تم ربط شاشة الموردين هنا
         'receipts': window.receiptsController,
         'deliveries': window.deliveriesController,
         'transfers': window.transfersController,
