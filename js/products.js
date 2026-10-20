@@ -1,5 +1,5 @@
 /**
- * Products Controller with Full CRUD, Initial Stock, Real-Time Search & Barcode
+ * Products Controller with Custom Reorder Point, Initial Stock, CRUD, Search & Barcode
  */
 window.productsController = {
     allProducts: [],
@@ -35,7 +35,6 @@ window.productsController = {
                 this.allProducts.push(data);
             });
 
-            // ترتيب زمني من الأحدث للأقدم
             this.allProducts.sort((a, b) => {
                 const tA = a.createdAt?.seconds || 0;
                 const tB = b.createdAt?.seconds || 0;
@@ -55,7 +54,6 @@ window.productsController = {
                     <h2 class="view-title">دليل المنتجات والأصناف</h2>
                 </div>
                 <div class="view-header-right">
-                    <!-- حقل البحث الفوري والباركود -->
                     <div class="search-container expanded">
                         <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--text-muted); margin-left: 6px;">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -70,24 +68,23 @@ window.productsController = {
                 </div>
             </div>
 
-            <!-- شريط معلومات الفلترة -->
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.88rem;">
                 <span id="search-results-count">عرض ${this.filteredProducts.length} من أصل ${this.allProducts.length} صنف</span>
                 <span style="font-size: 0.8rem; background: var(--surface-hover); padding: 0.2rem 0.6rem; border-radius: 6px; border: 1px solid var(--border);">
-                    ⚡ جاهز لمسح الباركود مباشرة
+                    ⚡ يدعم حد النواقص المخصص لكل صنف
                 </span>
             </div>
 
-            <!-- جدول المنتجات -->
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
                             <th>الباركود / SKU</th>
                             <th>اسم الصنف</th>
-                            <th>الفئة (Category)</th>
+                            <th>الفئة</th>
                             <th>سعر التكلفة</th>
                             <th>سعر البيع</th>
+                            <th>حد التنبيه (النواقص)</th>
                             <th style="text-align: center; width: 170px;">الإجراءات</th>
                         </tr>
                     </thead>
@@ -111,8 +108,8 @@ window.productsController = {
         if (this.filteredProducts.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
-                        🔍 لم يتم العثور على أي منتج مطابق للبحث أو الباركود
+                    <td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                        🔍 لم يتم العثور على أي منتج مطابق للبحث
                     </td>
                 </tr>
             `;
@@ -130,6 +127,11 @@ window.productsController = {
                 <td><span class="badge badge-draft">${p.category || 'عام'}</span></td>
                 <td>${Number(p.perUnitCost || 0).toFixed(2)} ج.م</td>
                 <td style="font-weight: 700; color: var(--primary);">${Number(p.salePrice || (p.perUnitCost ? p.perUnitCost * 1.25 : 0)).toFixed(2)} ج.م</td>
+                <td>
+                    <span class="badge badge-waiting" style="font-size: 0.85rem;">
+                        🔔 عند ${p.minAlertQty !== undefined ? p.minAlertQty : 5} ${p.uom || 'قطعة'}
+                    </span>
+                </td>
                 <td style="text-align: center;">
                     <button class="btn btn-secondary btn-sm btn-edit-product" data-id="${p.id}" style="margin-left: 4px;">تعديل</button>
                     <button class="btn btn-secondary btn-sm btn-delete-product text-error" data-id="${p.id}" style="color: var(--error); border-color: #fecdd3;">حذف</button>
@@ -137,7 +139,6 @@ window.productsController = {
             </tr>
         `).join('');
 
-        // ربط أحداث التعديل والحذف
         tbody.querySelectorAll('.btn-edit-product').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -202,16 +203,12 @@ window.productsController = {
             });
         }
 
-        // زر إضافة منتج جديد
         const addBtn = document.getElementById('btn-add-product');
         if (addBtn) {
             addBtn.addEventListener('click', () => this.openProductModal());
         }
     },
 
-    /**
-     * نافذة إضافة وتعديل المنتج مع دعم الرصيد الافتتاحي
-     */
     openProductModal: function(product = null) {
         const isEdit = !!product;
         const modalContainer = document.getElementById('modal-container');
@@ -221,7 +218,7 @@ window.productsController = {
             <div class="modal-overlay" id="product-modal-overlay">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h3>${isEdit ? 'تعديل بيانات المنتج' : 'تكويد منتج جديد وإدخال رصيده'}</h3>
+                        <h3>${isEdit ? 'تعديل بيانات المنتج وحد النواقص' : 'تكويد منتج جديد وتحديد حد النواقص'}</h3>
                         <button class="btn-close" id="btn-close-modal">&times;</button>
                     </div>
                     <form id="product-modal-form">
@@ -266,6 +263,15 @@ window.productsController = {
                                 </div>
                             </div>
 
+                            <!-- حقل تحديد حد الأمان والتنبيه المخصص -->
+                            <div class="form-group" style="background: #fffbeb; border: 1.5px solid #fde68a; padding: 0.85rem 1rem; border-radius: 8px;">
+                                <label for="prod-min-alert" style="color: #92400e; font-weight: 800; display:flex; justify-content:space-between;">
+                                    <span>⚠️ حد تنبيه النواقص (Reorder Alert)</span>
+                                    <span style="font-size: 0.75rem; font-weight: normal; color: #b45309;">(يصلك إنذار عند هذا الرصيد أو أقل)</span>
+                                </label>
+                                <input type="number" id="prod-min-alert" value="${isEdit ? (product.minAlertQty !== undefined ? product.minAlertQty : 5) : 5}" min="0" placeholder="مثلاً: 10 كراتين أو 5 قطع" style="border-color: #fcd34d; font-weight: bold;">
+                            </div>
+
                             ${!isEdit ? `
                             <div style="background: #f8fafc; border: 1.5px dashed var(--primary); padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
@@ -287,7 +293,7 @@ window.productsController = {
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" id="btn-cancel-modal">إلغاء</button>
-                            <button type="submit" class="btn btn-primary">${isEdit ? 'حفظ التعديلات' : 'حفظ الصنف وتوريد الرصيد'}</button>
+                            <button type="submit" class="btn btn-primary">${isEdit ? 'حفظ التعديلات' : 'حفظ الصنف وتفعيل التنبيه'}</button>
                         </div>
                     </form>
                 </div>
@@ -319,6 +325,7 @@ window.productsController = {
             const uom = document.getElementById('prod-uom').value;
             const perUnitCost = parseFloat(document.getElementById('prod-cost').value) || 0;
             const salePrice = parseFloat(document.getElementById('prod-sale').value) || (perUnitCost * 1.25);
+            const minAlertQty = parseInt(document.getElementById('prod-min-alert').value) || 0;
             const initialQty = !isEdit ? (parseInt(document.getElementById('prod-init-qty')?.value) || 0) : 0;
 
             if (!name || !sku) {
@@ -336,12 +343,13 @@ window.productsController = {
                     uom,
                     perUnitCost,
                     salePrice,
+                    minAlertQty,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
                 if (isEdit) {
                     await db.collection('products').doc(product.id).update(productData);
-                    utils.showToast("تم تحديث بيانات المنتج بنجاح", "success");
+                    utils.showToast("تم تحديث بيانات الصنف وحد التنبيه بنجاح", "success");
                 } else {
                     productData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
 
@@ -379,7 +387,7 @@ window.productsController = {
                     }
 
                     await batch.commit();
-                    utils.showToast(initialQty > 0 ? `تم تكويد المنتج وإضافة ${initialQty} ${uom} للمخزن` : "تمت إضافة المنتج بنجاح", "success");
+                    utils.showToast(`تم تكويد الصنف وضبط حد التنبيه عند (${minAlertQty})`, "success");
                 }
 
                 if (window.utils && window.utils.invalidateProductsCache) {
@@ -399,9 +407,6 @@ window.productsController = {
         });
     },
 
-    /**
-     * حذف منتج
-     */
     deleteProduct: async function(id) {
         const product = this.allProducts.find(p => p.id === id);
         const name = product ? product.name : 'هذا المنتج';
